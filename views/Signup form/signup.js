@@ -1,30 +1,33 @@
 const btn = document.getElementById('submit');
 
-btn.addEventListener('click', (e) => {
-    e.preventDefault();
+btn.addEventListener('click', storeSignupDetails)
 
-    const name = document.getElementById('username').value;
-    const email = document.getElementById('email').value;
-    const phoneNumber = document.getElementById('phoneNumber').value;
-    const password = document.getElementById('password').value;
+async function storeSignupDetails(e) {
+    try {
+        e.preventDefault();
 
-    let signupDetails = {
-        name,
-        email,
-        phoneNumber,
-        password
-    }
-
-    axios.post('http://localhost:3000/user/signup-user', signupDetails).then(response => {
-        alert(response.data.message)
-        console.log(response.data.message);
-        console.log(response)
-        document.getElementById('someResponse').textContent = `${response.data.message}`;
-        document.getElementById('someResponse').style.color = 'green';
-    }).catch(err => {
+        const name = document.getElementById('username').value;
+        const email = document.getElementById('email').value;
+        const phoneNumber = document.getElementById('phoneNumber').value;
+        const password = document.getElementById('password').value;
+    
+        let signupDetails = {
+            name,
+            email,
+            phoneNumber,
+            password
+        }
+    
+        const response = await axios.post('http://localhost:3000/user/signup-user', signupDetails)
+            alert(response.data.message)
+            console.log(response.data.message);
+            console.log(response)
+            document.getElementById('someResponse').textContent = `${response.data.message}`;
+            document.getElementById('someResponse').style.color = 'green';
+    } catch(err) {
         alert(err.response.data.error)
-        document.getElementById('showResponse').textContent = `${err.response.data.error}`
+        document.getElementById('someResponse').innerHTML = `Error: ${err.response.data.error}`
         document.getElementById('someResponse').style.color = 'red';
         console.log(err);
-    })
-})
+    }
+}
