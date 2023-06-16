@@ -18,7 +18,13 @@ btn.addEventListener('click', (e) => {
     axios.post('http://localhost:3000/user/signup-user', signupDetails).then(response => {
         alert(response.data.message)
         console.log(response.data.message);
+        console.log(response)
+        document.getElementById('someResponse').textContent = `${response.data.message}`;
+        document.getElementById('someResponse').style.color = 'green';
     }).catch(err => {
+        alert(err.response.data.error)
+        document.getElementById('showResponse').textContent = `${err.response.data.error}`
+        document.getElementById('someResponse').style.color = 'red';
         console.log(err);
     })
 })
