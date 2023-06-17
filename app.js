@@ -4,6 +4,9 @@ const cors = require('cors');
 
 const app = express();
 
+const dotenv = require('dotenv');
+dotenv.config({ path: '.env'});
+
 const sequelize = require('./util/database')
 
 const User = require('./models/user');

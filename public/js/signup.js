@@ -26,10 +26,14 @@ async function storeSignupDetails(e) {
             console.log(response)
             document.getElementById('someResponse').textContent = `${response.data.message}`;
             document.getElementById('someResponse').style.color = 'green';
+            window.location.href = '../views/login.html';
     } catch(err) {
         alert(err.response.data.error)
         document.getElementById('someResponse').innerHTML = `Error: ${err.response.data.error}`
         document.getElementById('someResponse').style.color = 'red';
         console.log(err);
+        setTimeout(function () {
+            document.getElementById('someResponse').style.display = 'none'
+        }, 5000);
     }
 }
