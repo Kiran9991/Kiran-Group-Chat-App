@@ -17,6 +17,8 @@ async function storeSignupDetails(e) {
             phoneNumber,
             password
         }
+
+        console.log('it worked')
     
         const response = await axios.post('http://localhost:3000/user/signup-user', signupDetails)
             alert(response.data.message)

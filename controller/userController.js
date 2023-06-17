@@ -1,9 +1,21 @@
 const User = require('../models/user');
 const bcrypt = require('bcrypt');
 
+function isStringInvalid(string) {
+    if(string == undefined || string.length === 0) {
+        return true;
+    } else {
+        return false;
+    }
+}
+
 const signup = async(req, res) => {
     try {
         const {name, email, phoneNumber, password} = req.body;
+
+        if(isStringInvalid(name) || isStringInvalid(email) || isStringInvalid(phoneNumber) || isStringInvalid(password)) {
+            return res.status(400).json({error: "Bad parameters. Something is missing"})
+        }
 
         const user = await User.findOne({ where: { email }});
 
