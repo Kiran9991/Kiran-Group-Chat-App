@@ -20,15 +20,10 @@ async function loginUser (e) {
     localStorage.setItem('token', response.data.token)
     document.getElementById('someResponse').textContent = `${response.data.message}`;
     document.getElementById('someResponse').style.color = 'green';
-    setTimeout(function () {
-        document.getElementById('someResponse').style.display = 'none'
-    }, 5000);
+    window.location.href = '../views/chatapp.html';
     } catch (err) {
         console.log(err);
         document.getElementById('someResponse').innerHTML = `Error: ${err.response.data.error}`
         document.getElementById('someResponse').style.color = 'red';
-        setTimeout(function () {
-            document.getElementById('someResponse').style.display = 'none'
-        }, 5000);
     }
 }

@@ -32,8 +32,5 @@ async function storeSignupDetails(e) {
         document.getElementById('someResponse').innerHTML = `Error: ${err.response.data.error}`
         document.getElementById('someResponse').style.color = 'red';
         console.log(err);
-        setTimeout(function () {
-            document.getElementById('someResponse').style.display = 'none'
-        }, 5000);
     }
 }
