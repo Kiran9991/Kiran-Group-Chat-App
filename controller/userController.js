@@ -1,8 +1,7 @@
 const User = require('../models/user');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const dotenv = require('dotenv');
-dotenv.config();
+require('dotenv').config();
 
 function isStringInvalid(string) {
     if(string == undefined || string.length === 0) {

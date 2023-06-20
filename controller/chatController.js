@@ -14,6 +14,17 @@ const userChats = async(req, res) => {
     }
 }
 
+const getUserChats = async(req, res) => {
+    try{
+        const textMessages = await Chat.findAll();
+        res.status(202).json({ allUsersChats:textMessages })
+    } catch(err) {
+        console.log(err);
+        res.status(500).json({ error: err});
+    }
+}
+
 module.exports = {
-    userChats
+    userChats,
+    getUserChats
 }

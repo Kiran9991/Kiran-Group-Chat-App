@@ -4,8 +4,7 @@ const cors = require('cors');
 
 const app = express();
 
-const dotenv = require('dotenv');
-dotenv.config({ path: '.env'});
+require('dotenv').config();
 
 const sequelize = require('./util/database')
 
@@ -16,7 +15,7 @@ const userRoutes = require('./routes/userRoutes');
 const chatRoutes = require('./routes/chatRoutes');
 
 app.use(cors());
-app.use(bodyParser.json({ extended: false }));
+// app.use(bodyParser.json());
 app.use(express.json());
 
 app.use('/user', userRoutes);

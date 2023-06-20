@@ -1,7 +1,6 @@
 const User = require('../models/user');
 const jwt = require('jsonwebtoken');
-const dotenv = require('dotenv');
-dotenv.config();
+require('dotenv').config();
 
 const authenticate = (req, res, next) => {
     try {
