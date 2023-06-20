@@ -10,6 +10,7 @@ const Chat = sequelize.define('chats', {
       primaryKey: true
     },
     message: Sequelize.STRING,
+    sender: Sequelize.STRING
   });
   
   module.exports = Chat;

@@ -24,6 +24,7 @@ async function storeMessage(e) {
     const token = localStorage.getItem('token');
 
     const response = await axios.post('http://localhost:3000/chat-app/user-chat', messageObj, { headers: {"Authorization": token }});
+    showUsersChatsOnScreen(response.data.textMessage);
     console.log(response);
     console.log(response.status);
     if(response.status === 201) {
@@ -35,41 +36,44 @@ async function storeMessage(e) {
     }
 }
 
-window.addEventListener('DOMContentLoaded', async() => {
-    // const token = localStorage.getItem('token');
-    const response = await axios.get('http://localhost:3000/chat-app/users-chats');
-    const userChats = response.data.allUsersChats;
-    userChats.forEach((chats) => {
-        showUsersChatsOnScreen(chats);
-    })
+
+window.addEventListener('DOMContentLoaded', async () => {
+    const getUserTexts = async() => {
+        try {
+        const response = await axios.get('http://localhost:3000/chat-app/users-chats');
+        const userChats = response.data.allUsersChats;
+        userChats.forEach(Chats => {
+            showUsersChatsOnScreen(Chats);
+        })
+        } catch(err) {
+            console.log(err);
+        }
+    }
+    setInterval(() => {
+        getUserTexts();
+    }, 1000)
 })
 
 function showUsersChatsOnScreen(chats) {
     const messagesDiv = document.getElementById('userMessage');
-    const usersChatsDiv = document.createElement('div');
-    usersChatsDiv.className = 'message my-message';
     
+    const userChatsDiv = document.createElement('div');
+    userChatsDiv.className = 'message other-message';
+
+    messagesDiv.append(userChatsDiv);
+
     const div = document.createElement('div');
-    const div1 = document.createElement('div');
 
-    messagesDiv.append(usersChatsDiv);
-    // usersChatsDiv.append(div);
-    usersChatsDiv.append(div1);
+    userChatsDiv.append(div);
 
-    // const userDiv = document.createElement('div');
-    // userDiv.className = 'name';
-    // userDiv.textContent = chats.id;
+    const userDiv = document.createElement('div');
+    userDiv.className = 'name';
+    userDiv.textContent = chats.sender;
 
-    // const userChat = document.createElement('div');
-    // userChat.className = 'text';
-    // userChat.textContent = chats.textMessage;
+    const userChat = document.createElement('div');
+    userChat.className = 'text';
+    userChat.textContent = chats.message;
 
-    // div.append(userDiv);
-    // div.append(userDiv);
-
-    div.className = 'name';
-    div.textContent = chats.id;
-
-    div1.className = 'text';
-    div1.textContent = chats.message;
+    div.append(userDiv);
+    div.append(userChat);
 }
