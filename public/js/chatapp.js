@@ -1,5 +1,6 @@
 const exitChat = document.getElementById('exit-chat');
 const sendMessage = document.getElementById('send-message');
+const chatsCanStored = 20;
 
 
 exitChat.onclick = () => {
@@ -20,8 +21,6 @@ async function postMessage(e) {
         textMessage
     }
 
-    // showUsersChatsOnScreen(messageObj);
-
     const token = localStorage.getItem('token');
 
     const response = await axios.post('http://localhost:3000/chat-app/send-message', messageObj, { headers: {"Authorization": token }});
@@ -29,7 +28,8 @@ async function postMessage(e) {
 
     let usersChats = JSON.parse(localStorage.getItem('usersChats')) || [];
     usersChats.push(response.data.textMessage)
-    localStorage.setItem('usersChats', JSON.stringify(usersChats));
+    let chats = usersChats.slice(usersChats.length - chatsCanStored);
+    localStorage.setItem('usersChats', JSON.stringify(chats));
 
     console.log(usersChats)
 
@@ -55,15 +55,13 @@ window.addEventListener('DOMContentLoaded', async () => {
         lastMsgId = oldMsgs[oldMsgs.length-1].id;
     }
 
-    for(let i = 0; i<oldMsgs.length-1; i++) {
-        showUsersChatsOnScreen(oldMsgs[i]);
-    }
+    oldMsgs.forEach(chats => {
+        showUsersChatsOnScreen(chats)
+    })
 
-    // setInterval(() => {
+    setInterval(() => {
         getUserMsgs(lastMsgId);
-        // document.getElementById('sender').textContent = '';
-        // document.getElementById('senderMsg').textContent = '';
-    // },3000)
+    },1000)
     
     } catch(err) {
         console.log(err);
@@ -75,11 +73,7 @@ const getUserMsgs = async (lastMsgId) => {
         const response = await axios.get(`http://localhost:3000/chat-app/get-Message?lastMsgId=${lastMsgId}`);
         const userChats = response.data.latestChats; 
         console.log(userChats);
-        if(userChats !== 'no messages') {
-            userChats.forEach(Msgs => {
-                showUsersChatsOnScreen(Msgs);
-            })
-        }
+        
     } catch(err) {
         console.log(err);
     }
@@ -100,12 +94,10 @@ function showUsersChatsOnScreen(chats) {
     let userDiv = document.createElement('div');
     userDiv.className = 'name';
     userDiv.textContent = chats.sender;
-    // userChat.id = 'sender'
 
     let userChat = document.createElement('div');
     userChat.className = 'text';
     userChat.textContent = chats.message;
-    // userChat.id = 'senderMsg';
 
     div.append(userDiv);
     div.append(userChat);
