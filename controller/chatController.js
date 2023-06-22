@@ -16,10 +16,16 @@ const userChats = async(req, res) => {
     }
 }
 
-const getUserChats = async(req, res) => {
+const getNewMessage = async(req, res) => {
     try{
-        const textMessages = await Chat.findAll();
-        res.status(202).json({ allUsersChats:textMessages })
+        const lastMsgId = req.query.lastMsgId;
+        console.log(lastMsgId);
+        const textMessages = await Chat.findAll({ where:{id:lastMsgId}});
+        if(textMessages.length > 0) {
+            return res.status(202).json({ latestChats: textMessages })
+        }else {
+            return res.status(202).json({ latestChats: 'no messages' })
+        }
     } catch(err) {
         console.log(err);
         res.status(500).json({ error: err});
@@ -28,5 +34,5 @@ const getUserChats = async(req, res) => {
 
 module.exports = {
     userChats,
-    getUserChats
+    getNewMessage
 }
