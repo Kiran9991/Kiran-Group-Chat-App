@@ -1,4 +1,5 @@
 const User = require('../models/user');
+const Group = require('../models/group');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
@@ -71,5 +72,5 @@ const login = async (req, res) => {
 
 module.exports = {
     signup,
-    login
+    login,
 }
