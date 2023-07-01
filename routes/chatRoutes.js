@@ -10,4 +10,6 @@ router.post('/send-message', authenticateMiddleware.authenticate, chatController
 
 router.get('/get-message', chatController.getNewMessage);
 
+router.get('/get-groupLink', chatController.getGroupLink);
+
 module.exports = router;

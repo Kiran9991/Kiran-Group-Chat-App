@@ -2,15 +2,17 @@ const Sequelize = require('sequelize');
 
 const sequelize = require('../util/database');
 
-const Group = sequelize.define('groups', {
+const InviteLink = sequelize.define('invitelink', {
     id: {
       type: Sequelize.INTEGER,
       autoIncrement: true,
       allowNull: false,
       primaryKey: true
     },
-    groupName: Sequelize.STRING,
-    createdBy: Sequelize.STRING,
+    inviteLink: Sequelize.STRING,
+    sender: Sequelize.STRING,
+    toUserId: Sequelize.INTEGER,
+    groupId: Sequelize.INTEGER
   });
   
-  module.exports = Group;
+  module.exports = InviteLink;

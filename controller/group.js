@@ -1,5 +1,7 @@
 const Group = require('../models/group');
 const User = require('../models/user');
+const InviteLink = require('../models/inviteLink');
+const Chats = require('../models/chat');
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
 
@@ -20,7 +22,7 @@ const postGroup = async(req, res) => {
             return res.status(400).json({error: "Parameters are missing"});
         }
 
-        const group = await Group.create({ groupName:groupName, createdBy:name });
+        const group = await Group.create({ groupName:groupName, createdBy:name, userId:req.user.id });
         res.status(202).json({ newGroup:group, message: `Successfully created ${groupName}` })
     } catch(err) {
         console.log(err);
@@ -30,7 +32,7 @@ const postGroup = async(req, res) => {
 
 const getGroups = async(req, res) => {
     try {
-        const groups = await Group.findAll({ where: {createdBy: req.user.name} });
+        const groups = await Group.findAll({ where: {userId: req.user.id} });
         const users = await User.findAll();
        
         res.status(201).json({ listOfGroups: groups, listOfUsers: users})
@@ -40,7 +42,38 @@ const getGroups = async(req, res) => {
     }
 } 
 
+const postLink = async(req, res) => {
+    try{
+        const { link, toUserId, groupId } = req.body;
+
+        const links = await InviteLink.create({ 
+            inviteLink: link, 
+            sender: req.user.name, 
+            toUserId: toUserId,
+            groupId: groupId, 
+            userId: req.user.id 
+        })
+        res.status(202).json({ links: links, message: 'Successfully sended link' })
+    } catch(err) {
+        console.log(err);
+        res.status(500).json({ error: 'Something went wrong'})
+    }
+}
+
+const getLinks = async(req, res) => {
+    try{
+        const userId = req.user.id;
+        const links = await InviteLink.findAll({ where: {toUserId: userId } });
+        res.status(202).json({ requestLink: links });
+    } catch(err) {
+        console.log(err);
+        res.status(500).json({ error: 'Something went wrong'})
+    }
+} 
+
 module.exports = {
     postGroup,
-    getGroups
+    getGroups,
+    postLink,
+    getLinks,
 }

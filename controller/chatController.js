@@ -33,7 +33,20 @@ const getNewMessage = async(req, res) => {
     }
 }
 
+const getGroupLink = async(req, res) => {
+    try{
+        const groupIds = req.query.groupId;
+        console.log(groupIds);
+        const groupData = await Group.findOne({ where:{id:groupIds} });
+        res.status(202).json({ groupDetails:groupData });
+    } catch(err) {
+        console.log(err);
+        res.status(500).json({ error: `Something went wrong`});
+    }
+}
+
 module.exports = {
     userChats,
-    getNewMessage
+    getNewMessage,
+    getGroupLink
 }

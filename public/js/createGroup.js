@@ -15,19 +15,20 @@ async function createGroup (e) {
     const groupName = document.getElementById('groupName').value;
 
     const groupObj = {
-        groupName
+        groupName,
     }
 
     const token = localStorage.getItem('token');
 
-    const res = await axios.post('http://localhost:3000/user-groups/add-group', groupObj, { headers: {"Authorization": token }});
+    const res = await axios.post('http://localhost:3000/user-groups/add-group', groupObj,
+     { headers: {"Authorization": token }});
     console.log(res); 
     localStorage.setItem('groupDetails', JSON.stringify(res.data.newGroup));
     document.getElementById('showResponse').textContent = res.data.message;
     document.getElementById('showResponse').style.color = 'green';
     const groupId = res.data.newGroup.id;
     alert(res.data.message)
-    localStorage.setItem('link',`http://localhost:3000/chat.html/${groupId}`)
+    localStorage.setItem('link',`../views/chatApp.html/${groupId}`)
     window.location.href = `../views/chatApp.html?groupId=${groupId}`;
     } catch(err) {
         console.log(err);
