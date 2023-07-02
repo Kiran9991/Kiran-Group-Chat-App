@@ -6,12 +6,14 @@ const router = express.Router();
 
 const authenticateMiddleware = require('../middleware/auth');
 
-router.post('/add-group', authenticateMiddleware.authenticate, groupController.postGroup);
+router.post('/add-group', authenticateMiddleware.authenticate, groupController.postNewGroup);
 
 router.get('/get-groups', authenticateMiddleware.authenticate, groupController.getGroups);
 
-router.post('/send-link', authenticateMiddleware.authenticate, groupController.postLink);
+router.post('/send-Request', authenticateMiddleware.authenticate, groupController.postRequest);
 
-router.get('/get-link', authenticateMiddleware.authenticate, groupController.getLinks);
+router.get('/get-Request', authenticateMiddleware.authenticate, groupController.getRequest);
+
+router.get('/get-groupRequest', groupController.getGroupLink);
 
 module.exports = router;

@@ -1,9 +1,6 @@
 const Group = require('../models/group');
 const User = require('../models/user');
 const InviteLink = require('../models/inviteLink');
-const Chats = require('../models/chat');
-const jwt = require('jsonwebtoken');
-require('dotenv').config();
 
 function isStringInvalid(string) {
     if(string == undefined || string.length === 0) {
@@ -13,7 +10,7 @@ function isStringInvalid(string) {
     }
 }
 
-const postGroup = async(req, res) => {
+const postNewGroup = async(req, res) => {
     try {
         const { groupName } = req.body;
         const name = req.user.name;
@@ -42,7 +39,7 @@ const getGroups = async(req, res) => {
     }
 } 
 
-const postLink = async(req, res) => {
+const postRequest = async(req, res) => {
     try{
         const { link, toUserId, groupId } = req.body;
 
@@ -60,7 +57,7 @@ const postLink = async(req, res) => {
     }
 }
 
-const getLinks = async(req, res) => {
+const getRequest = async(req, res) => {
     try{
         const userId = req.user.id;
         const links = await InviteLink.findAll({ where: {toUserId: userId } });
@@ -71,9 +68,22 @@ const getLinks = async(req, res) => {
     }
 } 
 
+const getGroupLink = async(req, res) => {
+    try{
+        const groupIds = req.query.groupId;
+        console.log(groupIds);
+        const groupData = await Group.findOne({ where:{id:groupIds} });
+        res.status(202).json({ groupDetails:groupData });
+    } catch(err) {
+        console.log(err);
+        res.status(500).json({ error: `Something went wrong`});
+    }
+}
+
 module.exports = {
-    postGroup,
+    postNewGroup,
     getGroups,
-    postLink,
-    getLinks,
+    postRequest,
+    getRequest,
+    getGroupLink
 }

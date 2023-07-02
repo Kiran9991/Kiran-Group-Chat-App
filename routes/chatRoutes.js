@@ -6,10 +6,8 @@ const router = express.Router();
 
 const authenticateMiddleware = require('../middleware/auth');
 
-router.post('/send-message', authenticateMiddleware.authenticate, chatController.userChats);
+router.post('/send-message', authenticateMiddleware.authenticate, chatController.postMessage);
 
 router.get('/get-message', chatController.getNewMessage);
-
-router.get('/get-groupLink', chatController.getGroupLink);
 
 module.exports = router;

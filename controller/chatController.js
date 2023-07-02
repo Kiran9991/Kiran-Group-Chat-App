@@ -1,8 +1,6 @@
 const Chat = require('../models/chat');
-const User = require('../models/user');
-const Group = require('../models/group');
 
-const userChats = async(req, res) => {
+const postMessage = async(req, res) => {
     try {
         const { textMessage, groupId } = req.body;
 
@@ -20,8 +18,7 @@ const userChats = async(req, res) => {
 const getNewMessage = async(req, res) => {
     try{
         const lastMsgId = req.query.lastMsgId;
-        const groupId = req.query.groupId;
-        const textMessages = await Chat.findAll({ where:{id:lastMsgId}, where:{groupId: groupId}});
+        const textMessages = await Chat.findAll({ where:{id:lastMsgId}});
         if(textMessages.length > 0) {
             return res.status(202).json({ latestChats: textMessages })
         }else {
@@ -33,20 +30,7 @@ const getNewMessage = async(req, res) => {
     }
 }
 
-const getGroupLink = async(req, res) => {
-    try{
-        const groupIds = req.query.groupId;
-        console.log(groupIds);
-        const groupData = await Group.findOne({ where:{id:groupIds} });
-        res.status(202).json({ groupDetails:groupData });
-    } catch(err) {
-        console.log(err);
-        res.status(500).json({ error: `Something went wrong`});
-    }
-}
-
 module.exports = {
-    userChats,
+    postMessage,
     getNewMessage,
-    getGroupLink
 }
