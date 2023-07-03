@@ -59,7 +59,7 @@ window.addEventListener('DOMContentLoaded', async () => {
         document.getElementById('send-message').disabled = true;
         document.getElementById('messageBox').style.textAlign = 'center';
         document.getElementById('messageBox')
-        .textContent = `Please Select a Group or Create a new Group to Start Conversation`
+        .textContent = `Please Create a new Group to Start Conversation`
     }
 
     if(oldMsgs.length > 0) {
@@ -94,13 +94,13 @@ const getUserMsgs = async (lastMsgId) => {
         let userChats = response.data.latestChats; 
         // newUserChats.push(userChats)
         // console.log(newUserChats);
-        if(userChats === 'no messages') {
-            userChats = {
-                message: 'Enter some message to start conversation',
-                sender: 'Chat App'
-            }
-            showUsersNewChatOnScreen(userChats)
-        }
+        // if(userChats === 'no messages') {
+        //     userChats = {
+        //         message: 'Enter some message to start conversation',
+        //         sender: 'Chat App'
+        //     }
+        //     showUsersNewChatOnScreen(userChats)
+        // }
     } catch(err) {
         console.log(err);
     }
@@ -167,10 +167,11 @@ const getGroups = async() => {
 
     const token = localStorage.getItem('token');
     const res = await axios.get('http://localhost:3000/user-groups/get-groups', { headers: {"Authorization": token }});
-    // console.log(res);
-    const listGroups = res.data.listOfGroups;
+    
+    const usersGroups = res.data.groupsList
     const listUsers = res.data.listOfUsers;
-    listGroups.forEach(groups => {
+
+    usersGroups.forEach(groups => {
         showGroupsOnScreen(groups)
     })
     let showUsers = document.getElementById('showUsers');
@@ -230,30 +231,31 @@ const showUsersOnScreen = (users) => {
     li.append(div);
 
     const p = document.createElement('p');
-    const button = document.createElement('input');
-    button.value = 'send invite link';
-    button.type = 'button';
     p.textContent = users.name;
-    p.append(button)
 
     const groupData = JSON.parse(localStorage.getItem('groupDetails'));
-    const token = localStorage.getItem('token');
-    const link = `../views/chatApp.html?groupId=${groupData.id}`;
-    const groupId = groupData.id;
-    const toUserId = users.id;
-    const obj = {
-        link,
-        toUserId,
-        groupId
-    }
-    if(groupData.id) {
-    button.addEventListener('click', async() => {
-        const inviteLink = await axios.post(`http://localhost:3000/user-groups/send-Request`, obj,
-        { headers: {"Authorization": token }})
-        console.log(inviteLink.data.links);
-    })
-    }
+    if(groupData) {
+        const button = document.createElement('input');
+        button.value = 'send invite link';
+        button.type = 'button';
+        p.append(button)
 
+        const token = localStorage.getItem('token');
+        // const link = `../views/chatApp.html?groupId=${groupData.id}`;
+        const groupId = groupData.id;
+        const toUserId = users.id;
+        const obj = {
+            toUserId,
+            groupId
+        }
+        if(groupData.id) {
+        button.addEventListener('click', async() => {
+            const sendRequest = await axios.post(`http://localhost:3000/user-groups/send-Request`, obj,
+            { headers: {"Authorization": token }})
+            console.log(sendRequest.data.user_group);
+        })
+        }
+    }
     div.append(p)
     userLists.append(li)
 }

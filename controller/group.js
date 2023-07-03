@@ -1,5 +1,6 @@
 const Group = require('../models/group');
 const User = require('../models/user');
+const User_Group = require('../models/user_group');
 const InviteLink = require('../models/inviteLink');
 
 function isStringInvalid(string) {
@@ -20,7 +21,9 @@ const postNewGroup = async(req, res) => {
         }
 
         const group = await Group.create({ groupName:groupName, createdBy:name, userId:req.user.id });
-        res.status(202).json({ newGroup:group, message: `Successfully created ${groupName}` })
+        const user_group = await User_Group.create({ userId:req.user.id, groupId: group.dataValues.id})
+
+        res.status(202).json({ newGroup:group, message: `Successfully created ${groupName}`, user_group })
     } catch(err) {
         console.log(err);
         res.status(500).json({ error: err });
@@ -29,10 +32,20 @@ const postNewGroup = async(req, res) => {
 
 const getGroups = async(req, res) => {
     try {
-        const groups = await Group.findAll({ where: {userId: req.user.id} });
+        const user_group = await User_Group.findAll({ where:{userId: req.user.id}});
+        
+        let groupsList = [];
+        for(let i=0; i<user_group.length; i++) {
+            let group_id = user_group[i].dataValues.groupId;
+            if(group_id !== null) {
+                const groups = await Group.findByPk(group_id);
+                groupsList.push(groups)
+            }
+        }
+        // const groups = await Group.findAll({ where: {userId: req.user.id} });
         const users = await User.findAll();
        
-        res.status(201).json({ listOfGroups: groups, listOfUsers: users})
+        res.status(201).json({ listOfUsers: users, groupsList})
     } catch(err) {
         console.log(err);
         res.status(500).json({ error: 'Something went wrong' });
@@ -41,16 +54,11 @@ const getGroups = async(req, res) => {
 
 const postRequest = async(req, res) => {
     try{
-        const { link, toUserId, groupId } = req.body;
+        const { toUserId, groupId } = req.body;
 
-        const links = await InviteLink.create({ 
-            inviteLink: link, 
-            sender: req.user.name, 
-            toUserId: toUserId,
-            groupId: groupId, 
-            userId: req.user.id 
-        })
-        res.status(202).json({ links: links, message: 'Successfully sended link' })
+        const user_group = await User_Group.create({ userId:toUserId, groupId:groupId });
+
+        res.status(202).json({ user_group, message: 'Successfully sended link' })
     } catch(err) {
         console.log(err);
         res.status(500).json({ error: 'Something went wrong'})

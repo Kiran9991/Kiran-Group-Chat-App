@@ -12,6 +12,7 @@ const User = require('./models/user');
 const Chats = require('./models/chat');
 const Group = require('./models/group');
 const InviteLink = require('./models/inviteLink');
+const User_Group = require('./models/user_group');
 
 const userRoutes = require('./routes/userRoutes');
 const chatRoutes = require('./routes/chatRoutes');
@@ -34,10 +35,10 @@ Chats.belongsTo(Group);
 User.hasMany(InviteLink);
 InviteLink.belongsTo(User)
 
-User.belongsToMany(Group, { through: 'User_Group' });
-Group.belongsToMany(User, { through: 'User_Group' });
+User.belongsToMany(Group, { through: User_Group });
+Group.belongsToMany(User, { through: User_Group });
 
-User.hasMany(Group)
+// User.hasMany(Group)
 
 sequelize.sync().then(result => {
     app.listen(3000);
