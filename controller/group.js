@@ -1,7 +1,6 @@
 const Group = require('../models/group');
 const User = require('../models/user');
 const User_Group = require('../models/user_group');
-const InviteLink = require('../models/inviteLink');
 
 function isStringInvalid(string) {
     if(string == undefined || string.length === 0) {
@@ -37,12 +36,9 @@ const getGroups = async(req, res) => {
         let groupsList = [];
         for(let i=0; i<user_group.length; i++) {
             let group_id = user_group[i].dataValues.groupId;
-            if(group_id !== null) {
-                const groups = await Group.findByPk(group_id);
-                groupsList.push(groups)
-            }
+            const groups = await Group.findByPk(group_id);
+            groupsList.push(groups)
         }
-        // const groups = await Group.findAll({ where: {userId: req.user.id} });
         const users = await User.findAll();
        
         res.status(201).json({ listOfUsers: users, groupsList})
@@ -63,28 +59,22 @@ const postRequest = async(req, res) => {
         console.log(err);
         res.status(500).json({ error: 'Something went wrong'})
     }
-}
-
-const getRequest = async(req, res) => {
-    try{
-        const userId = req.user.id;
-        const links = await InviteLink.findAll({ where: {toUserId: userId } });
-        res.status(202).json({ requestLink: links });
-    } catch(err) {
-        console.log(err);
-        res.status(500).json({ error: 'Something went wrong'})
-    }
 } 
 
-const getGroupLink = async(req, res) => {
+const getGroupMembers = async(req, res) => {
     try{
-        const groupIds = req.query.groupId;
-        console.log(groupIds);
-        const groupData = await Group.findOne({ where:{id:groupIds} });
-        res.status(202).json({ groupDetails:groupData });
+        const groupId = req.query.groupId;
+        const usersDetails = [];
+        const user_group = await User_Group.findAll({ where:{groupId}})
+        for(let i=0; i<user_group.length; i++) {
+            let user_id = user_group[i].dataValues.userId;
+            const user = await User.findByPk(user_id)
+            usersDetails.push(user)
+        }
+        res.status(201).json({ usersDetails });
     } catch(err) {
         console.log(err);
-        res.status(500).json({ error: `Something went wrong`});
+        res.status(500).json({ error: `Something went wrong `})
     }
 }
 
@@ -92,6 +82,5 @@ module.exports = {
     postNewGroup,
     getGroups,
     postRequest,
-    getRequest,
-    getGroupLink
+    getGroupMembers
 }

@@ -10,10 +10,8 @@ router.post('/add-group', authenticateMiddleware.authenticate, groupController.p
 
 router.get('/get-groups', authenticateMiddleware.authenticate, groupController.getGroups);
 
-router.post('/send-Request', authenticateMiddleware.authenticate, groupController.postRequest);
+router.post('/add-user-toGroup', authenticateMiddleware.authenticate, groupController.postRequest);
 
-router.get('/get-Request', authenticateMiddleware.authenticate, groupController.getRequest);
-
-router.get('/get-groupRequest', groupController.getGroupLink);
+router.get('/get-groupMembers', groupController.getGroupMembers);
 
 module.exports = router;
