@@ -24,12 +24,12 @@ async function createGroup (e) {
      { headers: {"Authorization": token }});
     console.log(res); 
     localStorage.setItem('groupDetails', JSON.stringify(res.data.newGroup));
+    localStorage.setItem('isAdmin', JSON.stringify(true));
     document.getElementById('showResponse').textContent = res.data.message;
     document.getElementById('showResponse').style.color = 'green';
     const groupId = res.data.newGroup.id;
     alert(res.data.message)
-    localStorage.setItem('link',`../views/chatApp.html/${groupId}`)
-    window.location.href = `../views/chatApp.html?groupId=${groupId}`;
+    window.location.href = `../views/chatApp.html?groupId=${groupId}`
     } catch(err) {
         console.log(err);
         document.getElementById('showResponse').textContent = err.response.data.error;

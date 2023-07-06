@@ -20,7 +20,7 @@ const postNewGroup = async(req, res) => {
         }
 
         const group = await Group.create({ groupName:groupName, createdBy:name, userId:req.user.id });
-        const user_group = await User_Group.create({ userId:req.user.id, groupId: group.dataValues.id})
+        const user_group = await User_Group.create({ userId:req.user.id, groupId: group.dataValues.id, isAdmin: true})
 
         res.status(202).json({ newGroup:group, message: `Successfully created ${groupName}`, user_group })
     } catch(err) {
@@ -41,7 +41,7 @@ const getGroups = async(req, res) => {
         }
         const users = await User.findAll();
        
-        res.status(201).json({ listOfUsers: users, groupsList})
+        res.status(201).json({ listOfUsers: users, groupsList, user_group})
     } catch(err) {
         console.log(err);
         res.status(500).json({ error: 'Something went wrong' });
@@ -52,7 +52,7 @@ const postRequest = async(req, res) => {
     try{
         const { toUserId, groupId } = req.body;
 
-        const user_group = await User_Group.create({ userId:toUserId, groupId:groupId });
+        const user_group = await User_Group.create({ userId:toUserId, groupId:groupId, isAdmin:false });
 
         res.status(202).json({ user_group, message: 'Successfully sended link' })
     } catch(err) {
@@ -71,10 +71,38 @@ const getGroupMembers = async(req, res) => {
             const user = await User.findByPk(user_id)
             usersDetails.push(user)
         }
-        res.status(201).json({ usersDetails });
+        res.status(201).json({ usersDetails, user_group });
     } catch(err) {
         console.log(err);
         res.status(500).json({ error: `Something went wrong `})
+    }
+}
+
+const deleteGroupMember = async(req, res) => {
+    try {
+        const user_groupId = req.query.user_groupId;
+        
+        const user_group = await User_Group.destroy({ where:{id: user_groupId } });
+        res.status(200).json({ user_group , message: `Successfully deleted user_group_Id`})
+
+    } catch(err) {
+        console.log(err);
+        res.status(500).json({ error: `Something went wrong` });
+    }
+}
+
+const updateIsAdmin = async(req, res) => {
+    try {
+        const user_group_Id = req.query.user_group_Id;
+        
+        const user_group = await User_Group.findOne({ where:{id: user_group_Id } });
+
+        const updateAdmin = await user_group.update({ isAdmin: true });
+
+        res.status(202).json({ updateAdmin , message: `Successfully made Admin of Group`});
+    } catch(err) {
+        console.log(err);
+        res.status(500).json({ error: `Something went wrong` });
     }
 }
 
@@ -82,5 +110,7 @@ module.exports = {
     postNewGroup,
     getGroups,
     postRequest,
-    getGroupMembers
+    getGroupMembers,
+    deleteGroupMember,
+    updateIsAdmin
 }

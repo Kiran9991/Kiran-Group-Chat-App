@@ -14,4 +14,8 @@ router.post('/add-user-toGroup', authenticateMiddleware.authenticate, groupContr
 
 router.get('/get-groupMembers', groupController.getGroupMembers);
 
+router.delete('/delete-user', groupController.deleteGroupMember);
+
+router.post('/make-admin', groupController.updateIsAdmin);
+
 module.exports = router;

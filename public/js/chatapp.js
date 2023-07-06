@@ -6,7 +6,7 @@ const addGroup = document.getElementById('addGroup');
 exitChat.onclick = () => {
     window.location.href = '../views/login.html';
     localStorage.removeItem('groupDetails');
-    localStorage.removeItem('link');
+    localStorage.removeItem('isAdmin');
 }
 
 sendMessage.addEventListener('click', postMessage);
@@ -78,7 +78,7 @@ window.addEventListener('DOMContentLoaded', async () => {
 
     // setInterval(() => {
         getUserMsgs(lastMsgId);
-        document.getElementById('newMessages').textContent = ' ';
+        // document.getElementById('newMessages').textContent = ' ';
     // },3000)
     
     } catch(err) {
@@ -159,13 +159,15 @@ const getGroups = async() => {
 
     const token = localStorage.getItem('token');
     const res = await axios.get('http://localhost:3000/user-groups/get-groups', { headers: {"Authorization": token }});
-    
+    // console.log(res.data);
     const usersGroups = res.data.groupsList
     const listUsers = res.data.listOfUsers;
+    const user_group = res.data.user_group
 
-    usersGroups.forEach(groups => {
-        showGroupsOnScreen(groups)
-    })
+    for(let i=0, j=0; i<usersGroups.length, j<user_group.length; i++,j++) {
+        showGroupsOnScreen(usersGroups[i], user_group[j])
+    }
+
     let addUsers = document.getElementById('addUsers');
     addUsers.addEventListener('click', () => {
         showUserListTitle();
@@ -173,35 +175,34 @@ const getGroups = async() => {
             showUsersOnScreen(users)
         })
     });
+    if(usersGroups.length > 0) {
     const showGroupMembers = document.getElementById('showGroupMembers');
     showGroupMembers.addEventListener('click', async () => {
         const groupDetails = JSON.parse(localStorage.getItem('groupDetails'))
-        showUserListTitle()
-        document.getElementById('userListTitle').textContent = `Group Members`
+        showGroupUserListTitle()
         const res = await axios.get(`http://localhost:3000/user-groups/get-groupMembers?groupId=${groupDetails.id}`);
-        console.log(res.data.usersDetails);
+        // console.log(res.data.user_group);
         const listOfGroupMembers = res.data.usersDetails
-        listOfGroupMembers.forEach(users => {
-            showGroupUsersOnScreen(users)
-        })
+        const user_groupDetails = res.data.user_group; 
+        for(let i=0, j=0; i<listOfGroupMembers.length, j<user_groupDetails.length; i++,j++) {
+            showGroupUsersOnScreen(listOfGroupMembers[i], user_groupDetails[j])
+        }
     })
+    }
     } catch(err) {
         console.log(err);
     }
 }
 
-const showGroupsOnScreen = (groups) => {
+const showGroupsOnScreen = (groups, user_group) => {
     const groupLists = document.getElementById('groupLists');
 
     const li = document.createElement('li');
     li.className = 'contact';
     li.addEventListener('click', async() => {
-        
-        console.log('current group');
         localStorage.setItem('groupDetails',JSON.stringify(groups));
-        localStorage.setItem('link',`http://localhost:3000/chatApp.html/${groups.id}`)
-        // window.location.href = `../views/chatApp.html?groupId=${groups.id}`;
-        window.location.reload()
+        window.location.href = `../views/chatApp.html?groupId=${groups.id}`
+        localStorage.setItem('isAdmin', JSON.stringify(user_group.isAdmin));
     })
 
     const div = document.createElement('div');
@@ -219,6 +220,7 @@ const showGroupsOnScreen = (groups) => {
 const showUsersOnScreen = (users) => {
 
     const token = localStorage.getItem('token');
+    const isAdmin = JSON.parse(localStorage.getItem('isAdmin'));
     const decodeToken = parseJwt(token);
 
     if(users.id !== decodeToken.userId) {
@@ -236,6 +238,7 @@ const showUsersOnScreen = (users) => {
     
         const groupData = JSON.parse(localStorage.getItem('groupDetails'));
         if(groupData) {
+            if(isAdmin) {
             const button = document.createElement('input');
             button.value = 'Add to Your group';
             button.type = 'button';
@@ -249,23 +252,29 @@ const showUsersOnScreen = (users) => {
             }
             if(groupData.id) {
             button.addEventListener('click', async() => {
-                const addUserToGroup = await axios.post(`http://localhost:3000/user-groups/add-user-toGroup`, obj,
-                { headers: {"Authorization": token }})
-                console.log(addUserToGroup.data.user_group);
-                const groupDetails = JSON.parse(localStorage.getItem('groupDetails'));
-                if(addUserToGroup.data.user_group.userId === users.id) {
-                    alert(`You successfully added ${users.name} to ${groupDetails.groupName}`)
+                try {
+                    const addUserToGroup = await axios.post(`http://localhost:3000/user-groups/add-user-toGroup`, obj,
+                    { headers: {"Authorization": token }})
+                    console.log(addUserToGroup.data.user_group);
+                    const groupDetails = JSON.parse(localStorage.getItem('groupDetails'));
+                    if(addUserToGroup.data.user_group.userId === users.id) {
+                        alert(`You successfully added ${users.name} to ${groupDetails.groupName}`)
+                    }
+                } catch(err) {
+                    console.log(err);
+                    alert(`${users.name} is already in your Group`)
                 }
             })
             }
+        }
         }
         div.append(p)
         userLists1.append(li)
     }
 }
 
-const showGroupUsersOnScreen = (users) => {
-
+const showGroupUsersOnScreen = (users, user_group) => {
+    const groupDetails = JSON.parse(localStorage.getItem('groupDetails'))
     const token = localStorage.getItem('token');
     const decodeToken = parseJwt(token);
 
@@ -279,16 +288,77 @@ const showGroupUsersOnScreen = (users) => {
     li.append(div);
 
     const p = document.createElement('p');
-    
-    if(users.id === decodeToken.userId) {
-        p.textContent = `You`
-    }
     p.textContent = users.name;
 
-    const groupData = JSON.parse(localStorage.getItem('groupDetails'));
+    const isAdmin = JSON.parse(localStorage.getItem('isAdmin'));
+    const removeUser = document.createElement('button');
+    const makeAdmin = document.createElement('button');
+    const leaveGroup = document.createElement('button')
+
+    if(user_group.isAdmin) {
+        p.textContent = users.name + ' Group Admin'
+        p.style.color = 'black';
+    }
+
+    if(users.id === decodeToken.userId) {
+        leaveGroup.innerHTML = `Leave`;
+        p.append(leaveGroup)
+        const user_groupId = user_group.id;
+        leaveUserGroup(leaveGroup, user_groupId, li);
+    }
+
+    if(isAdmin) {
+
+    removeUser.innerHTML = `remove`;
+    makeAdmin.innerHTML = `Make Admin`
+    p.append(removeUser)
+    p.append(makeAdmin)
+
+    if(users.id === decodeToken.userId) {
+        removeUser.remove()
+        makeAdmin.remove()
+    }
+
+    if(user_group.isAdmin) {
+        removeUser.remove()
+        makeAdmin.remove()
+    }
+        
+    removeUser.addEventListener('click', async() => {
+        const user_groupId = user_group.id;
+        const res = await axios.delete(`http://localhost:3000/user-groups/delete-user?user_groupId=${user_groupId}`); 
+        if(res.status === 200) {
+            li.remove();
+            alert(`You Successfully removed ${users.name} from ${groupDetails.groupName}`)
+        }
+    })
+
+    makeAdmin.addEventListener('click', async() => {
+        const user_group_Id = user_group.id;
+        const res = await axios.post(`http://localhost:3000/user-groups/make-admin?user_group_Id=${user_group_Id}`); 
+        if(res.status === 202) {
+            makeAdmin.remove();
+            removeUser.remove();
+            alert(`You Successfully Made ${users.name} Admin of ${groupDetails.groupName}`)
+        }
+    })
+    }
     
     div.append(p)
     userLists1.append(li)
+}
+
+const leaveUserGroup = (leaveGroup, user_groupId, li) => {
+    const groupDetails = JSON.parse(localStorage.getItem('groupDetails'))
+    leaveGroup.addEventListener('click',async() => {
+        const res = await axios.delete(`http://localhost:3000/user-groups/delete-user?user_groupId=${user_groupId}`);
+        if(res.status === 200) {
+            li.remove();
+            alert(`You Successfully leaved ${groupDetails.groupName}`)
+            localStorage.removeItem('groupDetails');
+            window.location.reload();
+        }
+    })
 }
 
 const showUserListTitle = () => {
@@ -305,6 +375,30 @@ const showUserListTitle = () => {
     userListsDiv.append(userListH3)
     userListH3.style.fontWeight = 'bold';
     userListH3.textContent = `List of Users`;
+    userListH3.id = 'userListTitle'
+    const closebtn = document.createElement('button');
+    userListH3.append(closebtn)
+    closebtn.innerHTML = 'Close';
+    contacts.append(userLists)
+    closebtn.addEventListener('click', () => {
+        userLists.remove();
+    })
+}
+
+const showGroupUserListTitle = () => {
+    const contacts = document.getElementById('contacts')
+    const userLists = document.createElement('ul');
+    userLists.id = 'userLists';
+    const userListsLi = document.createElement('li');
+    userListsLi.className = 'contact';
+    userLists.append(userListsLi);
+    const userListsDiv = document.createElement('div');
+    userListsDiv.className = 'wrap';
+    userListsLi.append(userListsDiv);
+    const userListH3 = document.createElement('h3');
+    userListsDiv.append(userListH3)
+    userListH3.style.fontWeight = 'bold';
+    userListH3.textContent = `Group Members`;
     userListH3.id = 'userListTitle'
     const closebtn = document.createElement('button');
     userListH3.append(closebtn)
