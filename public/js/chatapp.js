@@ -1,7 +1,10 @@
+const socket=io('http://localhost:3000')
+
 const exitChat = document.getElementById('exit-chat');
 const sendMessage = document.getElementById('send-message');
 const chatsCanStored = 100;
 const addGroup = document.getElementById('addGroup');
+const searchUsers = document.getElementById('searchContacts');
 
 exitChat.onclick = () => {
     window.location.href = '../views/login.html';
@@ -29,7 +32,8 @@ async function postMessage(e) {
     const token = localStorage.getItem('token');
 
     const response = await axios.post('http://localhost:3000/chat-app/send-message', messageObj, { headers: {"Authorization": token }});
-    showUsersNewChatOnScreen(response.data.textMessage);
+    showUsersChatsOnScreen(response.data.textMessage);
+    socket.emit('send-message', response.data.textMessage);
 
     let usersChats = JSON.parse(localStorage.getItem('usersChats')) || [];
     usersChats.push(response.data.textMessage)
@@ -38,13 +42,11 @@ async function postMessage(e) {
 
     if(response.status === 201) {
         message.value = '';
-        window.location.reload();
     }
     } catch(err) {
         console.log(err);
     }
 }
-
 
 window.addEventListener('DOMContentLoaded', async () => {
     try {
@@ -53,6 +55,12 @@ window.addEventListener('DOMContentLoaded', async () => {
 
     const oldMsgs = JSON.parse(localStorage.getItem('usersChats')) || [];
     const groupDetails = JSON.parse(localStorage.getItem('groupDetails')) || { id: null, groupName: 'Chat App'}
+    const token = localStorage.getItem('token');
+    const decodeToken = parseJwt(token);
+    const userName = decodeToken.name;
+    const groupId = groupDetails.id;
+    socket.emit('joined-group', groupId)
+    console.log(`curren groupId is ${groupId}`);
     
     if(groupDetails.id === null) {
         document.getElementById('message-input').disabled = true;
@@ -68,19 +76,19 @@ window.addEventListener('DOMContentLoaded', async () => {
 
     oldMsgs.forEach(chats => {
         if(groupDetails.id === chats.groupId) {
-            showUsersOldChatsOnScreen(chats)
+            showUsersChatsOnScreen(chats)
         }
+    })
+
+    socket.on('received-message', messages => {
+        console.log(messages);
+        showUsersChatsOnScreen(messages)
     })
 
     showGroupName(groupDetails.groupName)
     getGroups();
     showUserName();
-
-    // setInterval(() => {
-        getUserMsgs(lastMsgId);
-        // document.getElementById('newMessages').textContent = ' ';
-    // },3000)
-    
+    getUserMsgs(lastMsgId);
     } catch(err) {
         console.log(err);
     }
@@ -91,14 +99,15 @@ const getUserMsgs = async (lastMsgId) => {
         const groupData = JSON.parse(localStorage.getItem('groupDetails')) || { id:-1 };
         const grouId = groupData.id
         const response = await axios.get(`http://localhost:3000/chat-app/get-Message?lastMsgId=${lastMsgId}&groupId=${grouId}`,)
-        let userChats = response.data
-        // console.log(userChats);
+        let userChats = response.data.textMessages
+        let localChats = JSON.parse(localStorage.getItem('usersChats')) || [];
+        localStorage.setItem('usersChats', JSON.stringify(userChats))
     } catch(err) {
         console.log(err);
     }
 }
 
-function showUsersOldChatsOnScreen(chats) {
+function showUsersChatsOnScreen(chats) {
     const token = localStorage.getItem('token');
     const decodeToken = parseJwt(token);
     
@@ -119,25 +128,15 @@ function showUsersOldChatsOnScreen(chats) {
     ul.append(li);
 }
 
-function showUsersNewChatOnScreen(chats) {
-    const token = localStorage.getItem('token');
-    const decodeToken = parseJwt(token);
-    
+const showNotificationOnScreen = (name) => {
     const ul = document.getElementById('newMessages');
     ul.style.textAlign = 'center';
 
-    const li = document.createElement('li');
-    li.className = 'sent';
     const p = document.createElement('p');
-    li.append(p)
+    p.style.fontFamily = 'bold'
+    p.textContent = `${name} is connected`;
 
-    p.textContent = `${chats.sender} : ${chats.message}`;
-
-    if(chats.sender === decodeToken.name) {
-        p.textContent = `You : ${chats.message}`
-    }
-
-    ul.append(li);
+    ul.append(p);
 }
 
 addGroup.addEventListener('click', () => {
@@ -164,9 +163,13 @@ const getGroups = async() => {
     const listUsers = res.data.listOfUsers;
     const user_group = res.data.user_group
 
-    for(let i=0, j=0; i<usersGroups.length, j<user_group.length; i++,j++) {
-        showGroupsOnScreen(usersGroups[i], user_group[j])
-    }
+    const showGroups = document.getElementById('showMyGroups');
+    showGroups.addEventListener('click', () => {
+        showGroupsListTitle();
+        for(let i=0, j=0; i<usersGroups.length, j<user_group.length; i++,j++) {
+            showGroupsOnScreen(usersGroups[i], user_group[j])
+        }
+    })
 
     let addUsers = document.getElementById('addUsers');
     addUsers.addEventListener('click', () => {
@@ -202,7 +205,7 @@ const showGroupsOnScreen = (groups, user_group) => {
     li.addEventListener('click', async() => {
         localStorage.setItem('groupDetails',JSON.stringify(groups));
         window.location.href = `../views/chatApp.html?groupId=${groups.id}`
-        localStorage.setItem('isAdmin', JSON.stringify(user_group.isAdmin));
+        localStorage.setItem('isAdmin', JSON.stringify(user_group.isAdmin)); 
     })
 
     const div = document.createElement('div');
@@ -224,7 +227,7 @@ const showUsersOnScreen = (users) => {
     const decodeToken = parseJwt(token);
 
     if(users.id !== decodeToken.userId) {
-        const userLists1 = document.getElementById('userLists');
+        const userLists1 = document.getElementById('userLists');//userLists
 
         const li = document.createElement('li');
         li.className = 'contact';
@@ -235,6 +238,8 @@ const showUsersOnScreen = (users) => {
     
         const p = document.createElement('p');
         p.textContent = users.name;
+
+        // document.getElementById('search').hidden = false;
     
         const groupData = JSON.parse(localStorage.getItem('groupDetails'));
         if(groupData) {
@@ -361,6 +366,29 @@ const leaveUserGroup = (leaveGroup, user_groupId, li) => {
     })
 }
 
+const showGroupsListTitle = () => {
+    const contacts = document.getElementById('contacts')
+    const userLists = document.createElement('ul');
+    userLists.id = 'groupLists';
+    const userListsLi = document.createElement('li');
+    userListsLi.className = 'contact';
+    userLists.append(userListsLi);
+    const userListsDiv = document.createElement('div');
+    userListsDiv.className = 'wrap';
+    userListsLi.append(userListsDiv);
+    const userListH3 = document.createElement('h3');
+    userListsDiv.append(userListH3)
+    userListH3.style.fontWeight = 'bold';
+    userListH3.textContent = `My Groups`;
+    const closebtn = document.createElement('button');
+    userListH3.append(closebtn)
+    closebtn.innerHTML = 'Close';
+    contacts.append(userLists)
+    closebtn.addEventListener('click', () => {
+        userLists.remove();
+    })
+}
+
 const showUserListTitle = () => {
     const contacts = document.getElementById('contacts')
     const userLists = document.createElement('ul');
@@ -374,7 +402,7 @@ const showUserListTitle = () => {
     const userListH3 = document.createElement('h3');
     userListsDiv.append(userListH3)
     userListH3.style.fontWeight = 'bold';
-    userListH3.textContent = `List of Users`;
+    userListH3.textContent = `List of Contacts`;
     userListH3.id = 'userListTitle'
     const closebtn = document.createElement('button');
     userListH3.append(closebtn)
@@ -382,6 +410,7 @@ const showUserListTitle = () => {
     contacts.append(userLists)
     closebtn.addEventListener('click', () => {
         userLists.remove();
+        // document.getElementById('search').hidden = true;
     })
 }
 
@@ -420,3 +449,7 @@ const showUserName = () => {
     const userName = document.getElementById('userName');
     userName.textContent = `${decodeToken.name} Groups Lists`
 }
+
+
+
+

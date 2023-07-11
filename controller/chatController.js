@@ -18,9 +18,9 @@ const postMessage = async(req, res) => {
 const getNewMessage = async(req, res) => {
     try{
         const lastMsgId = req.query.lastMsgId;
-        const textMessages = await Chat.findAll({ where:{id:lastMsgId}});
+        const textMessages = await Chat.findAll();
         if(textMessages.length > 0) {
-            return res.status(202).json({ latestChats: textMessages })
+            return res.status(202).json({ textMessages })
         }else {
             return res.status(202).json({ latestChats: 'no messages' })
         }
