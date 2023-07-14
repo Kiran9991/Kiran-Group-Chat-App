@@ -2,6 +2,8 @@ require('dotenv').config();
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
+const multer = require('multer');
+const upload = multer();
 
 const app = express();
 const server = require('http').createServer(app);
@@ -24,15 +26,17 @@ const User_Group = require('./models/user_group');
 const userRoutes = require('./routes/userRoutes');
 const chatRoutes = require('./routes/chatRoutes');
 const groupRoutes = require('./routes/groupRoutes');
-app.use(express.static('public'));
+const fileRoutes = require('./routes/fileRoutes');
 
 app.use(cors());
 app.use(bodyParser.json());
 app.use(express.json());
+app.use(bodyParser.urlencoded({extended: true}));
 
 app.use('/user', userRoutes);
 app.use('/chat-app', chatRoutes);
 app.use('/user-groups', groupRoutes);
+app.use('/files', upload.single('userFile'),fileRoutes);
 
 User.hasMany(Chats);
 Chats.belongsTo(User);

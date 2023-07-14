@@ -5,7 +5,12 @@ const postMessage = async(req, res) => {
         const { textMessage, groupId } = req.body;
 
         let name = req.user.name;
-        const chats = await Chat.create({ message:textMessage, sender: name, groupId:groupId, userId: req.user.id });
+        const chats = await Chat.create({ 
+            message:textMessage, 
+            sender: name, 
+            groupId:groupId, 
+            userId: req.user.id 
+        });
         
         res.status(201).json({ textMessage: chats, message: 'Successfully sended message' })
 
@@ -18,7 +23,7 @@ const postMessage = async(req, res) => {
 const getNewMessage = async(req, res) => {
     try{
         const lastMsgId = req.query.lastMsgId;
-        const textMessages = await Chat.findAll();
+        const textMessages = await Chat.findAll({ where:{id:lastMsgId} });
         if(textMessages.length > 0) {
             return res.status(202).json({ textMessages })
         }else {
@@ -26,7 +31,7 @@ const getNewMessage = async(req, res) => {
         }
     } catch(err) {
         console.log(err);
-        res.status(500).json({ error: err});
+        res.status(500).json({ error: 'Something went wrong' });
     }
 }
 

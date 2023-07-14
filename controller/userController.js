@@ -1,5 +1,4 @@
 const User = require('../models/user');
-const Group = require('../models/group');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
@@ -66,7 +65,7 @@ const login = async (req, res) => {
             return res.status(404).json({ error: `User not found`})
         }
     } catch(err) {
-        res.status(500).json({ error: err });
+        res.status(500).json({ error: 'Something went wrong' });
     }
 }
 

@@ -29,7 +29,7 @@ async function createGroup (e) {
     document.getElementById('showResponse').style.color = 'green';
     const groupId = res.data.newGroup.id;
     alert(res.data.message)
-    window.location.href = `../views/chatApp.html?groupId=${groupId}`
+    // window.location.href = `../views/chatApp.html?groupId=${groupId}`
     } catch(err) {
         console.log(err);
         document.getElementById('showResponse').textContent = err.response.data.error;

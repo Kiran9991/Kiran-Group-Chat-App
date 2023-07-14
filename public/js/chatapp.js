@@ -2,47 +2,74 @@ const socket=io('http://localhost:3000')
 
 const exitChat = document.getElementById('exit-chat');
 const sendMessage = document.getElementById('send-message');
-const chatsCanStored = 100;
+const chatsCanStored = 1000;
 const addGroup = document.getElementById('addGroup');
 const searchUsers = document.getElementById('searchContacts');
+const sendMedia = document.getElementById('send-media');
+const message = document.getElementById('message-input');
 
-exitChat.onclick = () => {
-    window.location.href = '../views/login.html';
-    localStorage.removeItem('groupDetails');
-    localStorage.removeItem('isAdmin');
-}
+sendMessage.addEventListener('click', () => {
+    if(message.value !== '') {
+        postMessage();
+    }else {
+        alert(`Can't send empty message`);
+    }
+});
 
-sendMessage.addEventListener('click', postMessage);
-
-async function postMessage(e) {
+async function postMessage() {
     try {
-    e.preventDefault();
-
-    let message = document.getElementById('message-input');
 
     const textMessage = message.value
     const groupdata = JSON.parse(localStorage.getItem('groupDetails')) || { id:null };
-    const groupId = groupdata.id
+    const groupId = groupdata.id;
     
     const messageObj = {
         textMessage,
-        groupId
+        groupId,
     }
 
     const token = localStorage.getItem('token');
 
-    const response = await axios.post('http://localhost:3000/chat-app/send-message', messageObj, { headers: {"Authorization": token }});
+    const response = await axios.post('http://localhost:3000/chat-app/send-message', 
+    messageObj, { headers: {"Authorization": token }});
+    console.log(response.data.textMessage);
+    
     showUsersChatsOnScreen(response.data.textMessage);
+   
     socket.emit('send-message', response.data.textMessage);
 
-    let usersChats = JSON.parse(localStorage.getItem('usersChats')) || [];
-    usersChats.push(response.data.textMessage)
-    let chats = usersChats.slice(usersChats.length - chatsCanStored);
-    localStorage.setItem('usersChats', JSON.stringify(chats));
+    // let usersChats = JSON.parse(localStorage.getItem('usersChats')) || [];
+    // usersChats.push(response.data.textMessage)
+    // let chats = usersChats.slice(usersChats.length - chatsCanStored);
+    // localStorage.setItem('usersChats', JSON.stringify(chats));
 
     if(response.status === 201) {
         message.value = '';
+        sendMedia.value = '';
     }
+    } catch(err) {
+        console.log(err);
+    }
+}
+
+sendMedia.addEventListener('input', uploadFile)
+
+async function uploadFile(e) {
+    try {
+        const token = localStorage.getItem('token');
+        const groupDetails = JSON.parse(localStorage.getItem('groupDetails'));
+        const groupId = groupDetails.id;
+        const file = e.target.files[0];
+        const form = new FormData();
+        form.append('userFile', file);
+        
+        const response = await axios.post(`http://localhost:3000/files/send-file?groupId=${Number(groupId)}`, form,
+        {headers:{'Authorization':token ,'Content-Type': 'multipart/form-data'}})
+        
+        const fileData = response.data.files;
+        showUsersChatsOnScreen(response.data.files)
+        socket.emit('send-message', response.data.files);
+        console.log(fileData);
     } catch(err) {
         console.log(err);
     }
@@ -51,27 +78,19 @@ async function postMessage(e) {
 window.addEventListener('DOMContentLoaded', async () => {
     try {
 
-    let lastMsgId = 1;
+    let lastMsgId = -1;
 
     const oldMsgs = JSON.parse(localStorage.getItem('usersChats')) || [];
     const groupDetails = JSON.parse(localStorage.getItem('groupDetails')) || { id: null, groupName: 'Chat App'}
-    const token = localStorage.getItem('token');
-    const decodeToken = parseJwt(token);
-    const userName = decodeToken.name;
     const groupId = groupDetails.id;
     socket.emit('joined-group', groupId)
-    console.log(`curren groupId is ${groupId}`);
     
     if(groupDetails.id === null) {
         document.getElementById('message-input').disabled = true;
         document.getElementById('send-message').disabled = true;
-        document.getElementById('messageBox').style.textAlign = 'center';
-        document.getElementById('messageBox')
-        .textContent = `Please Create a new Group to Start Conversation`
-    }
-
-    if(oldMsgs.length > 0) {
-        lastMsgId = oldMsgs[oldMsgs.length-1].id;
+        document.getElementById('showError').style.textAlign = 'center';
+        const textNode = document.createTextNode(`Please Create a New Group to Start Conversation`)
+        document.getElementById('showError').append(textNode)
     }
 
     oldMsgs.forEach(chats => {
@@ -97,11 +116,8 @@ window.addEventListener('DOMContentLoaded', async () => {
 const getUserMsgs = async (lastMsgId) => {
     try {
         const groupData = JSON.parse(localStorage.getItem('groupDetails')) || { id:-1 };
-        const grouId = groupData.id
-        const response = await axios.get(`http://localhost:3000/chat-app/get-Message?lastMsgId=${lastMsgId}&groupId=${grouId}`,)
-        let userChats = response.data.textMessages
-        let localChats = JSON.parse(localStorage.getItem('usersChats')) || [];
-        localStorage.setItem('usersChats', JSON.stringify(userChats))
+        const response = await axios.get(`http://localhost:3000/chat-app/get-Message?lastMsgId=${lastMsgId}`,)
+        let lastestChats = response.data.textMessages
     } catch(err) {
         console.log(err);
     }
@@ -119,11 +135,24 @@ function showUsersChatsOnScreen(chats) {
     const p = document.createElement('p');
     li.append(p)
 
-    p.textContent = `${chats.sender} : ${chats.message}`;
-
-    if(chats.sender === decodeToken.name) {
-        p.textContent = `You : ${chats.message}`
+    if(isValidURL(chats.message)) {
+        p.innerHTML = `<img src="${chats.message}" alt="${chats.sender}">`
+    }else {
+        p.textContent = `${chats.sender} : ${chats.message}`;
     }
+
+    if(chats.userId === decodeToken.userId) {
+        if(isValidURL(chats.message)) {
+            p.innerHTML = `<img src="${chats.message}" alt="${chats.sender}">`
+        }else {
+            p.textContent = `you : ${chats.message}`;
+        }
+    }
+
+    let usersChats = JSON.parse(localStorage.getItem('usersChats')) || [];
+    usersChats.push(chats)
+    let Chats = usersChats.slice(usersChats.length - chatsCanStored);
+    localStorage.setItem('usersChats', JSON.stringify(Chats));
 
     ul.append(li);
 }
@@ -199,13 +228,33 @@ const getGroups = async() => {
 
 const showGroupsOnScreen = (groups, user_group) => {
     const groupLists = document.getElementById('groupLists');
+    // const groupDetails = JSON.parse(localStorage.getItem('groupDetails')) || { id: null, groupName: 'Chat App'}
 
     const li = document.createElement('li');
     li.className = 'contact';
+    
     li.addEventListener('click', async() => {
+        // const oldMsgs = JSON.parse(localStorage.getItem('usersChats')) || [];
         localStorage.setItem('groupDetails',JSON.stringify(groups));
-        window.location.href = `../views/chatApp.html?groupId=${groups.id}`
+        // window.location.href = `../views/chatApp.html?groupId=${groups.id}`
+        window.location.reload();
+        // console.log(groups.groupName);
+        // showGroupName(groups.groupName);
         localStorage.setItem('isAdmin', JSON.stringify(user_group.isAdmin)); 
+
+        // if(flag) {
+        //     document.getElementById('message-input').disabled = false;
+        //     document.getElementById('send-message').disabled = false;
+        //     document.getElementById('showError').remove();
+        //     flag = false;
+        // }
+
+        // oldMsgs.forEach(chats => {
+        //     if(groupDetails.id === chats.groupId) {
+        //         console.log(chats.groupId);
+        //         showUsersChatsOnScreen(chats)
+        //     }
+        // })
     })
 
     const div = document.createElement('div');
@@ -449,6 +498,23 @@ const showUserName = () => {
     const userName = document.getElementById('userName');
     userName.textContent = `${decodeToken.name} Groups Lists`
 }
+
+function isValidURL(str) {
+    if(/^(http(s):\/\/.)[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)$/g.test(str)) {
+        //  console.log('YES');
+         return true;
+     } else {
+        //  console.log('NO');
+         return false;
+     }
+}
+
+exitChat.onclick = () => {
+    window.location.href = '../views/login.html';
+    localStorage.removeItem('groupDetails');
+    localStorage.removeItem('isAdmin');
+}
+
 
 
 

@@ -25,7 +25,7 @@ const postNewGroup = async(req, res) => {
         res.status(202).json({ newGroup:group, message: `Successfully created ${groupName}`, user_group })
     } catch(err) {
         console.log(err);
-        res.status(500).json({ error: err });
+        res.status(500).json({ error: 'Something went wrong' });
     }
 }
 
