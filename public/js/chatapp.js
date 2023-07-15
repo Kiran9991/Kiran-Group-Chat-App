@@ -32,16 +32,18 @@ async function postMessage() {
 
     const response = await axios.post('http://localhost:3000/chat-app/send-message', 
     messageObj, { headers: {"Authorization": token }});
-    console.log(response.data.textMessage);
     
     showUsersChatsOnScreen(response.data.textMessage);
    
     socket.emit('send-message', response.data.textMessage);
 
-    // let usersChats = JSON.parse(localStorage.getItem('usersChats')) || [];
-    // usersChats.push(response.data.textMessage)
-    // let chats = usersChats.slice(usersChats.length - chatsCanStored);
-    // localStorage.setItem('usersChats', JSON.stringify(chats));
+    console.log('the message obj is ', response.data.textMessage);
+
+    //Storing messages to local storage
+    let usersChats = JSON.parse(localStorage.getItem('usersChats')) || [];
+    usersChats.push(response.data.textMessage)
+    let chats = usersChats.slice(usersChats.length - chatsCanStored);
+    localStorage.setItem('usersChats', JSON.stringify(chats));
 
     if(response.status === 201) {
         message.value = '';
@@ -69,7 +71,14 @@ async function uploadFile(e) {
         const fileData = response.data.files;
         showUsersChatsOnScreen(response.data.files)
         socket.emit('send-message', response.data.files);
-        console.log(fileData);
+
+        console.log('the file obj is ', fileData);
+        
+        // Storing media file url to local storage
+        let usersChats = JSON.parse(localStorage.getItem('usersChats')) || [];
+        usersChats.push(response.data.files)
+        let chats = usersChats.slice(usersChats.length - chatsCanStored);
+        localStorage.setItem('usersChats', JSON.stringify(chats));
     } catch(err) {
         console.log(err);
     }
@@ -78,9 +87,7 @@ async function uploadFile(e) {
 window.addEventListener('DOMContentLoaded', async () => {
     try {
 
-    let lastMsgId = -1;
-
-    const oldMsgs = JSON.parse(localStorage.getItem('usersChats')) || [];
+    const usersChats = JSON.parse(localStorage.getItem('usersChats')) || [];
     const groupDetails = JSON.parse(localStorage.getItem('groupDetails')) || { id: null, groupName: 'Chat App'}
     const groupId = groupDetails.id;
     socket.emit('joined-group', groupId)
@@ -88,38 +95,64 @@ window.addEventListener('DOMContentLoaded', async () => {
     if(groupDetails.id === null) {
         document.getElementById('message-input').disabled = true;
         document.getElementById('send-message').disabled = true;
-        document.getElementById('showError').style.textAlign = 'center';
+        document.getElementById('showPreviousMsg').style.textAlign = 'center';
         const textNode = document.createTextNode(`Please Create a New Group to Start Conversation`)
-        document.getElementById('showError').append(textNode)
+        document.getElementById('showPreviousMsg').append(textNode)
     }
 
-    oldMsgs.forEach(chats => {
+    if(groupDetails.id != null) {
+        getUserMsgs(groupDetails.id);
+    }
+
+    usersChats.forEach(chats => {
         if(groupDetails.id === chats.groupId) {
             showUsersChatsOnScreen(chats)
         }
     })
 
     socket.on('received-message', messages => {
-        console.log(messages);
+        console.log('socket message obj is', messages);
         showUsersChatsOnScreen(messages)
+
+        // Storing received messages to local storage
+        usersChats.push(messages)
+        let chats = usersChats.slice(usersChats.length - chatsCanStored);
+        localStorage.setItem('usersChats', JSON.stringify(chats));
     })
 
     showGroupName(groupDetails.groupName)
     getGroups();
     showUserName();
-    getUserMsgs(lastMsgId);
     } catch(err) {
         console.log(err);
     }
 })
 
-const getUserMsgs = async (lastMsgId) => {
+const getUserMsgs = (groupId) => {
     try {
-        const groupData = JSON.parse(localStorage.getItem('groupDetails')) || { id:-1 };
-        const response = await axios.get(`http://localhost:3000/chat-app/get-Message?lastMsgId=${lastMsgId}`,)
-        let lastestChats = response.data.textMessages
+        const showPrevMsgs = document.getElementById('showPreviousMsg')
+        showPrevMsgs.style.textAlign = 'center';
+        const button = document.createElement('button');
+        showPrevMsgs.append(button)
+        button.innerHTML = `Show Previous messages`;
+        button.onclick = async () => {
+            //Getting messages from get req
+            const response = await axios.get(`http://localhost:3000/chat-app/get-Message?groupId=${groupId}`,)
+            let lastestChats = response.data.textMessages
+            // Storing Previous all messages in local storage
+            if(response.status === 202) {
+                localStorage.setItem('usersChats', JSON.stringify(lastestChats));
+                window.location.reload();
+                showPrevMsgs.remove()
+            }
+            if(response.status === 201) {
+                alert(response.data.message)
+                showPrevMsgs.remove()
+            }
+        }
     } catch(err) {
         console.log(err);
+        alert(err.response.data.err)
     }
 }
 
@@ -136,23 +169,18 @@ function showUsersChatsOnScreen(chats) {
     li.append(p)
 
     if(isValidURL(chats.message)) {
-        p.innerHTML = `<img src="${chats.message}" alt="${chats.sender}">`
+        p.innerHTML = `${chats.sender} : <img src="${chats.message}" alt="${chats.sender}">`
     }else {
         p.textContent = `${chats.sender} : ${chats.message}`;
     }
 
     if(chats.userId === decodeToken.userId) {
         if(isValidURL(chats.message)) {
-            p.innerHTML = `<img src="${chats.message}" alt="${chats.sender}">`
+            p.innerHTML = `you : <img src="${chats.message}" alt="${chats.sender}">`
         }else {
             p.textContent = `you : ${chats.message}`;
         }
     }
-
-    let usersChats = JSON.parse(localStorage.getItem('usersChats')) || [];
-    usersChats.push(chats)
-    let Chats = usersChats.slice(usersChats.length - chatsCanStored);
-    localStorage.setItem('usersChats', JSON.stringify(Chats));
 
     ul.append(li);
 }

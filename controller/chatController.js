@@ -4,7 +4,7 @@ const postMessage = async(req, res) => {
     try {
         const { textMessage, groupId } = req.body;
 
-        let name = req.user.name;
+        const name = req.user.name;
         const chats = await Chat.create({ 
             message:textMessage, 
             sender: name, 
@@ -22,12 +22,12 @@ const postMessage = async(req, res) => {
 
 const getNewMessage = async(req, res) => {
     try{
-        const lastMsgId = req.query.lastMsgId;
-        const textMessages = await Chat.findAll({ where:{id:lastMsgId} });
+        const groupId = req.query.groupId;
+        const textMessages = await Chat.findAll({ where:{groupId} });
         if(textMessages.length > 0) {
             return res.status(202).json({ textMessages })
         }else {
-            return res.status(202).json({ latestChats: 'no messages' })
+            return res.status(201).json({ message: 'there are no previous messages' })
         }
     } catch(err) {
         console.log(err);
