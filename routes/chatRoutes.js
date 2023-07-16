@@ -8,6 +8,6 @@ const authenticateMiddleware = require('../middleware/auth');
 
 router.post('/send-message', authenticateMiddleware.authenticate, chatController.postMessage);
 
-router.get('/get-message', chatController.getNewMessage);
+router.get('/get-message', chatController.getOldMessages);
 
 module.exports = router;

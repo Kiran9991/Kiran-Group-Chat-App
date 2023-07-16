@@ -18,11 +18,13 @@ const port = process.env.PORT || 3000
 
 const sequelize = require('./util/database')
 
+// models
 const User = require('./models/user');
 const Chats = require('./models/chat');
 const Group = require('./models/group');
 const User_Group = require('./models/user_group');
 
+// routes
 const userRoutes = require('./routes/userRoutes');
 const chatRoutes = require('./routes/chatRoutes');
 const groupRoutes = require('./routes/groupRoutes');
@@ -38,12 +40,15 @@ app.use('/chat-app', chatRoutes);
 app.use('/user-groups', groupRoutes);
 app.use('/files', upload.single('userFile'),fileRoutes);
 
+// User and textMessages relation
 User.hasMany(Chats);
 Chats.belongsTo(User);
 
+// Group and textMessages relation
 Group.hasMany(Chats);
 Chats.belongsTo(Group);
 
+// Users and Groups relation
 User.belongsToMany(Group, { through: User_Group });
 Group.belongsToMany(User, { through: User_Group });
 
@@ -67,7 +72,7 @@ io.on("connect", (socket) => {
     })
 });
 
-sequelize.sync().then(result => {
+sequelize.sync().then(() => {
     server.listen(port);
     console.log('server is running');
 }).catch(err => {

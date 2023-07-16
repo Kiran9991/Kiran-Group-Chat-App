@@ -10,7 +10,7 @@ router.post('/add-group', authenticateMiddleware.authenticate, groupController.p
 
 router.get('/get-groups', authenticateMiddleware.authenticate, groupController.getGroups);
 
-router.post('/add-user-toGroup', authenticateMiddleware.authenticate, groupController.postRequest);
+router.post('/add-user-toGroup', authenticateMiddleware.authenticate, groupController.addUserToGroup);
 
 router.get('/get-groupMembers', groupController.getGroupMembers);
 

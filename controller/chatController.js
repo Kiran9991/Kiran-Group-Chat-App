@@ -1,5 +1,6 @@
 const Chat = require('../models/chat');
-
+ 
+// Posting text Message to Chata table
 const postMessage = async(req, res) => {
     try {
         const { textMessage, groupId } = req.body;
@@ -20,7 +21,8 @@ const postMessage = async(req, res) => {
     }
 }
 
-const getNewMessage = async(req, res) => {
+// Getting old messages from Chats table according to groupId
+const getOldMessages = async(req, res) => {
     try{
         const groupId = req.query.groupId;
         const textMessages = await Chat.findAll({ where:{groupId} });
@@ -37,5 +39,5 @@ const getNewMessage = async(req, res) => {
 
 module.exports = {
     postMessage,
-    getNewMessage,
+    getOldMessages,
 }

@@ -7,12 +7,15 @@ const addGroup = document.getElementById('addGroup');
 const searchUsers = document.getElementById('searchContacts');
 const sendMedia = document.getElementById('send-media');
 const message = document.getElementById('message-input');
+const showGroups = document.getElementById('showMyGroups');
+const addUsers = document.getElementById('addUsers');
 
 sendMessage.addEventListener('click', () => {
     if(message.value !== '') {
         postMessage();
     }else {
-        alert(`Can't send empty message`);
+        const msg = `Can't send empty message`
+        showErrorMsg(msg);
     }
 });
 
@@ -98,6 +101,7 @@ window.addEventListener('DOMContentLoaded', async () => {
         document.getElementById('showPreviousMsg').style.textAlign = 'center';
         const textNode = document.createTextNode(`Please Create a New Group to Start Conversation`)
         document.getElementById('showPreviousMsg').append(textNode)
+        document.getElementById('send-media').disabled = true;
     }
 
     if(groupDetails.id != null) {
@@ -121,7 +125,6 @@ window.addEventListener('DOMContentLoaded', async () => {
     })
 
     showGroupName(groupDetails.groupName)
-    getGroups();
     showUserName();
     } catch(err) {
         console.log(err);
@@ -135,6 +138,7 @@ const getUserMsgs = (groupId) => {
         const button = document.createElement('button');
         showPrevMsgs.append(button)
         button.innerHTML = `Show Previous messages`;
+        button.className = 'button-18';
         button.onclick = async () => {
             //Getting messages from get req
             const response = await axios.get(`http://localhost:3000/chat-app/get-Message?groupId=${groupId}`,)
@@ -210,79 +214,48 @@ function parseJwt (token) {
     return JSON.parse(jsonPayload);
 }
 
-const getGroups = async() => {
-    try {
-
+showGroups.addEventListener('click', async () => {
     const token = localStorage.getItem('token');
     const res = await axios.get('http://localhost:3000/user-groups/get-groups', { headers: {"Authorization": token }});
-    // console.log(res.data);
     const usersGroups = res.data.groupsList
-    const listUsers = res.data.listOfUsers;
     const user_group = res.data.user_group
-
-    const showGroups = document.getElementById('showMyGroups');
-    showGroups.addEventListener('click', () => {
-        showGroupsListTitle();
-        for(let i=0, j=0; i<usersGroups.length, j<user_group.length; i++,j++) {
-            showGroupsOnScreen(usersGroups[i], user_group[j])
-        }
-    })
-
-    let addUsers = document.getElementById('addUsers');
-    addUsers.addEventListener('click', () => {
-        showUserListTitle();
-        listUsers.forEach(users => {
-            showUsersOnScreen(users)
-        })
-    });
-    if(usersGroups.length > 0) {
-    const showGroupMembers = document.getElementById('showGroupMembers');
-    showGroupMembers.addEventListener('click', async () => {
-        const groupDetails = JSON.parse(localStorage.getItem('groupDetails'))
-        showGroupUserListTitle()
-        const res = await axios.get(`http://localhost:3000/user-groups/get-groupMembers?groupId=${groupDetails.id}`);
-        // console.log(res.data.user_group);
-        const listOfGroupMembers = res.data.usersDetails
-        const user_groupDetails = res.data.user_group; 
-        for(let i=0, j=0; i<listOfGroupMembers.length, j<user_groupDetails.length; i++,j++) {
-            showGroupUsersOnScreen(listOfGroupMembers[i], user_groupDetails[j])
-        }
-    })
+    showGroupsListTitle();
+    for(let i=0, j=0; i<usersGroups.length, j<user_group.length; i++,j++) {
+        showGroupsOnScreen(usersGroups[i], user_group[j])
     }
-    } catch(err) {
-        console.log(err);
+})
+
+const showGroupMembers = document.getElementById('showGroupMembers');
+showGroupMembers.addEventListener('click', async () => {
+    const groupDetails = JSON.parse(localStorage.getItem('groupDetails'))
+    showGroupUserListTitle()
+    const res = await axios.get(`http://localhost:3000/user-groups/get-groupMembers?groupId=${groupDetails.id}`);
+    const listOfGroupMembers = res.data.usersDetails
+    const user_groupDetails = res.data.user_group; 
+    for(let i=0, j=0; i<listOfGroupMembers.length, j<user_groupDetails.length; i++,j++) {
+        showGroupUsersOnScreen(listOfGroupMembers[i], user_groupDetails[j])
     }
-}
+})
+
+addUsers.addEventListener('click', async() => {
+    const res = await axios.get('http://localhost:3000/user/get-users');
+    const listUsers = res.data.listOfUsers;
+    showUserListTitle();
+    listUsers.forEach(users => {
+        showUsersOnScreen(users)
+    })
+});
 
 const showGroupsOnScreen = (groups, user_group) => {
     const groupLists = document.getElementById('groupLists');
-    // const groupDetails = JSON.parse(localStorage.getItem('groupDetails')) || { id: null, groupName: 'Chat App'}
 
     const li = document.createElement('li');
     li.className = 'contact';
     
     li.addEventListener('click', async() => {
-        // const oldMsgs = JSON.parse(localStorage.getItem('usersChats')) || [];
         localStorage.setItem('groupDetails',JSON.stringify(groups));
-        // window.location.href = `../views/chatApp.html?groupId=${groups.id}`
         window.location.reload();
-        // console.log(groups.groupName);
-        // showGroupName(groups.groupName);
         localStorage.setItem('isAdmin', JSON.stringify(user_group.isAdmin)); 
-
-        // if(flag) {
-        //     document.getElementById('message-input').disabled = false;
-        //     document.getElementById('send-message').disabled = false;
-        //     document.getElementById('showError').remove();
-        //     flag = false;
-        // }
-
-        // oldMsgs.forEach(chats => {
-        //     if(groupDetails.id === chats.groupId) {
-        //         console.log(chats.groupId);
-        //         showUsersChatsOnScreen(chats)
-        //     }
-        // })
     })
 
     const div = document.createElement('div');
@@ -323,6 +296,7 @@ const showUsersOnScreen = (users) => {
             if(isAdmin) {
             const button = document.createElement('input');
             button.value = 'Add to Your group';
+            button.className = 'button-33'
             button.type = 'button';
             p.append(button)
     
@@ -374,8 +348,11 @@ const showGroupUsersOnScreen = (users, user_group) => {
 
     const isAdmin = JSON.parse(localStorage.getItem('isAdmin'));
     const removeUser = document.createElement('button');
+    removeUser.className = 'button-45'
     const makeAdmin = document.createElement('button');
+    makeAdmin.className = 'button-29'
     const leaveGroup = document.createElement('button')
+    leaveGroup.className = 'button-62'
 
     if(user_group.isAdmin) {
         p.textContent = users.name + ' Group Admin'
@@ -459,7 +436,8 @@ const showGroupsListTitle = () => {
     userListH3.textContent = `My Groups`;
     const closebtn = document.createElement('button');
     userListH3.append(closebtn)
-    closebtn.innerHTML = 'Close';
+    closebtn.innerHTML = 'close';
+    closebtn.className = 'button-17'
     contacts.append(userLists)
     closebtn.addEventListener('click', () => {
         userLists.remove();
@@ -483,7 +461,8 @@ const showUserListTitle = () => {
     userListH3.id = 'userListTitle'
     const closebtn = document.createElement('button');
     userListH3.append(closebtn)
-    closebtn.innerHTML = 'Close';
+    closebtn.innerHTML = 'close';
+    closebtn.className = 'button-17'
     contacts.append(userLists)
     closebtn.addEventListener('click', () => {
         userLists.remove();
@@ -508,11 +487,12 @@ const showGroupUserListTitle = () => {
     userListH3.id = 'userListTitle'
     const closebtn = document.createElement('button');
     userListH3.append(closebtn)
-    closebtn.innerHTML = 'Close';
+    closebtn.innerHTML = 'close';
+    closebtn.className = 'button-17'
     contacts.append(userLists)
-    closebtn.addEventListener('click', () => {
+    closebtn.onclick = () => {
         userLists.remove();
-    })
+    }
 }
 
 const showGroupName = (groupName) => {
@@ -538,9 +518,31 @@ function isValidURL(str) {
 }
 
 exitChat.onclick = () => {
-    window.location.href = '../views/login.html';
-    localStorage.removeItem('groupDetails');
-    localStorage.removeItem('isAdmin');
+    Swal.fire({
+        title: 'Are you sure?',
+        text: "You want to exit",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Yes, exit!'
+    }).then((result) => {
+        if (result.value) {
+            Swal.fire(
+                window.location.href = '../views/login.html',
+                localStorage.removeItem('groupDetails'),
+                localStorage.removeItem('isAdmin'),
+            )
+        }
+    })
+}
+
+function showErrorMsg(errorMsg) {
+    Swal.fire({
+        icon: 'error',
+        title: 'Oops...',
+        text: errorMsg
+    })
 }
 
 

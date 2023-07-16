@@ -1,8 +1,10 @@
 const Group = require('../models/group');
 const User = require('../models/user');
 const User_Group = require('../models/user_group');
+const sequelize = require('../util/database');
 
-function isStringInvalid(string) {
+// Method for checking string is valid or not
+const isStringInvalid = (string) => {
     if(string == undefined || string.length === 0) {
         return true;
     } else {
@@ -10,7 +12,9 @@ function isStringInvalid(string) {
     }
 }
 
+// Adding new group in groups table
 const postNewGroup = async(req, res) => {
+    const t = await sequelize.transaction();
     try {
         const { groupName } = req.body;
         const name = req.user.name;
@@ -19,16 +23,20 @@ const postNewGroup = async(req, res) => {
             return res.status(400).json({error: "Parameters are missing"});
         }
 
-        const group = await Group.create({ groupName:groupName, createdBy:name, userId:req.user.id });
-        const user_group = await User_Group.create({ userId:req.user.id, groupId: group.dataValues.id, isAdmin: true})
+        const group = await Group.create({ groupName:groupName, createdBy:name, userId:req.user.id },{ transaction: t});
+        const user_group = await User_Group.create({ userId:req.user.id, groupId: group.dataValues.id, isAdmin: true},
+        { transaction: t})
 
+        await t.commit();
         res.status(202).json({ newGroup:group, message: `Successfully created ${groupName}`, user_group })
     } catch(err) {
+        await t.rollback();
         console.log(err);
         res.status(500).json({ error: 'Something went wrong' });
     }
 }
 
+// Getting groups lists from groups table according to user id
 const getGroups = async(req, res) => {
     try {
         const user_group = await User_Group.findAll({ where:{userId: req.user.id}});
@@ -48,19 +56,24 @@ const getGroups = async(req, res) => {
     }
 } 
 
-const postRequest = async(req, res) => {
+// Adding user id to the particular group id in user group table
+const addUserToGroup = async(req, res) => {
+    const t = await sequelize.transaction();
     try{
         const { toUserId, groupId } = req.body;
 
-        const user_group = await User_Group.create({ userId:toUserId, groupId:groupId, isAdmin:false });
+        const user_group = await User_Group.create({ userId:toUserId, groupId:groupId, isAdmin:false },{ transaction: t});
 
-        res.status(202).json({ user_group, message: 'Successfully sended link' })
+        await t.commit();
+        res.status(202).json({ user_group, message: 'Successfully added user to your group' })
     } catch(err) {
+        await t.rollback();
         console.log(err);
         res.status(500).json({ error: 'Something went wrong'})
     }
 } 
 
+// Getting users id from user group according to group id and then getting the users according to user id
 const getGroupMembers = async(req, res) => {
     try{
         const groupId = req.query.groupId;
@@ -78,29 +91,37 @@ const getGroupMembers = async(req, res) => {
     }
 }
 
+// Deleting the user group id from the user group table
 const deleteGroupMember = async(req, res) => {
+    const t = await sequelize.transaction();
     try {
         const user_groupId = req.query.user_groupId;
         
-        const user_group = await User_Group.destroy({ where:{id: user_groupId } });
-        res.status(200).json({ user_group , message: `Successfully deleted user_group_Id`})
+        const user_group = await User_Group.destroy({ where:{id: user_groupId } }, { transaction: t});
 
+        await t.commit();
+        res.status(200).json({ user_group , message: `Successfully deleted user_group_Id`})
     } catch(err) {
+        await t.rollback();
         console.log(err);
         res.status(500).json({ error: `Something went wrong` });
     }
 }
 
+// Updating the user group status i.e isAdmin in user group table
 const updateIsAdmin = async(req, res) => {
+    const t = await sequelize.transaction();
     try {
         const user_group_Id = req.query.user_group_Id;
         
         const user_group = await User_Group.findOne({ where:{id: user_group_Id } });
 
-        const updateAdmin = await user_group.update({ isAdmin: true });
+        const updateAdmin = await user_group.update({ isAdmin: true }, { transaction:t });
 
+        await t.commit();
         res.status(202).json({ updateAdmin , message: `Successfully made Admin of Group`});
     } catch(err) {
+        await t.rollback();
         console.log(err);
         res.status(500).json({ error: `Something went wrong` });
     }
@@ -109,7 +130,7 @@ const updateIsAdmin = async(req, res) => {
 module.exports = {
     postNewGroup,
     getGroups,
-    postRequest,
+    addUserToGroup,
     getGroupMembers,
     deleteGroupMember,
     updateIsAdmin

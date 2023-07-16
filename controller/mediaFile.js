@@ -1,6 +1,7 @@
 const Chats = require('../models/chat');
 const S3service = require('../services/S3services'); 
 
+// Posting file url in the Chats table 
 const postMediaFile = async(req, res) => {
     try {
         const groupId = req.query.groupId;
