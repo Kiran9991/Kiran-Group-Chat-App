@@ -4,6 +4,7 @@ const bodyParser = require('body-parser');
 const cors = require('cors');
 const multer = require('multer');
 const upload = multer();
+const cron = require('node-cron');
 
 const app = express();
 const server = require('http').createServer(app);
@@ -23,12 +24,14 @@ const User = require('./models/user');
 const Chats = require('./models/chat');
 const Group = require('./models/group');
 const User_Group = require('./models/user_group');
+const ArchivedChats = require('./models/ArchivedChat');
 
 // routes
 const userRoutes = require('./routes/userRoutes');
 const chatRoutes = require('./routes/chatRoutes');
 const groupRoutes = require('./routes/groupRoutes');
 const fileRoutes = require('./routes/fileRoutes');
+const Chat = require('./models/chat');
 
 app.use(cors());
 app.use(bodyParser.json());
@@ -52,6 +55,9 @@ Chats.belongsTo(Group);
 User.belongsToMany(Group, { through: User_Group });
 Group.belongsToMany(User, { through: User_Group });
 
+User.hasMany(ArchivedChats);
+Group.hasMany(ArchivedChats);
+
 // Socket io
 io.on("connect", (socket) => {
 
@@ -71,6 +77,22 @@ io.on("connect", (socket) => {
         console.log(`user is disconnected`);
     })
 });
+
+cron.schedule('0 0 * * *', async () => {
+    //running every day 
+    try{
+        const chats = await Chats.findAll();
+        // console.log('chats ars', chats)
+
+        for(let chat of chats) {
+            await ArchivedChats.create({ message: chat.textmessage, sender: chat.name, groupId: chat.groupId, 
+            userId: chat.userId });
+            await Chats.destroy({ where:{id:chat.id} });
+        }
+    } catch(err) {
+        console.log(err);
+    }
+})
 
 sequelize.sync().then(() => {
     server.listen(port);
