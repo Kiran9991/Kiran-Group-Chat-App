@@ -55,7 +55,9 @@ Chats.belongsTo(Group);
 User.belongsToMany(Group, { through: User_Group });
 Group.belongsToMany(User, { through: User_Group });
 
+// Users and archived chats relation
 User.hasMany(ArchivedChats);
+// Groups and archied chats relation
 Group.hasMany(ArchivedChats);
 
 // Socket io
@@ -78,16 +80,18 @@ io.on("connect", (socket) => {
     })
 });
 
+// cron job
 cron.schedule('0 0 * * *', async () => {
     //running every day 
     try{
         const chats = await Chats.findAll();
-        // console.log('chats ars', chats)
 
         for(let chat of chats) {
             await ArchivedChats.create({ message: chat.textmessage, sender: chat.name, groupId: chat.groupId, 
             userId: chat.userId });
+            console.log('old chats are stored to archieved table');
             await Chats.destroy({ where:{id:chat.id} });
+            console.log('chats in the chats table are deleted');
         }
     } catch(err) {
         console.log(err);

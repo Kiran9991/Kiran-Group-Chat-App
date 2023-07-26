@@ -26,7 +26,7 @@ const postMessage = async(req, res) => {
 const getOldMessages = async(req, res) => {
     try{
         const groupId = req.query.groupId;
-        const textMessages = await ArchivedChat.findAll({ where:{groupId} });
+        const textMessages = await Chat.findAll({ where:{groupId} });
         if(textMessages.length > 0) {
             return res.status(202).json({ textMessages })
         }else {

@@ -9,6 +9,7 @@ const sendMedia = document.getElementById('send-media');
 const message = document.getElementById('message-input');
 const showGroups = document.getElementById('showMyGroups');
 const addUsers = document.getElementById('addUsers');
+const showGroupMembers = document.getElementById('showGroupMembers');
 
 sendMessage.addEventListener('click', () => {
     if(message.value !== '') {
@@ -225,7 +226,6 @@ showGroups.addEventListener('click', async () => {
     }
 })
 
-const showGroupMembers = document.getElementById('showGroupMembers');
 showGroupMembers.addEventListener('click', async () => {
     const groupDetails = JSON.parse(localStorage.getItem('groupDetails'))
     showGroupUserListTitle()
@@ -500,11 +500,16 @@ const showGroupName = (groupName) => {
     boxName.textContent = `${groupName}`;
 }
 
-const showUserName = () => {
+const showUserName = (status) => {
+    const adminStatus = JSON.parse(localStorage.getItem('isAdmin'));
     const token = localStorage.getItem('token');
     const decodeToken = parseJwt(token);
     const userName = document.getElementById('userName');
-    userName.textContent = `${decodeToken.name} Groups Lists`
+    if(adminStatus) {
+        userName.textContent = `${decodeToken.name} Group Admin`
+    }else {
+        userName.textContent = `${decodeToken.name} Group User`
+    }
 }
 
 function isValidURL(str) {
