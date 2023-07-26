@@ -31,7 +31,6 @@ const userRoutes = require('./routes/userRoutes');
 const chatRoutes = require('./routes/chatRoutes');
 const groupRoutes = require('./routes/groupRoutes');
 const fileRoutes = require('./routes/fileRoutes');
-const Chat = require('./models/chat');
 
 app.use(cors());
 app.use(bodyParser.json());
