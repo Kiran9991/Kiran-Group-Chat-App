@@ -6,6 +6,6 @@ const authenticateMiddleware = require('../middleware/auth');
 
 const router = express.Router();
 
-router.post('/send-file',authenticateMiddleware.authenticate, fileController.postMediaFile)
+router.post('/file',authenticateMiddleware.authenticate, fileController.postMediaFile)
 
 module.exports = router;

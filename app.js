@@ -23,14 +23,14 @@ const sequelize = require('./util/database')
 const User = require('./models/user');
 const Chats = require('./models/chat');
 const Group = require('./models/group');
-const User_Group = require('./models/user_group');
-const ArchivedChats = require('./models/ArchivedChat');
+const User_Group = require('./models/userGroup');
+const ArchivedChats = require('./models/archivedChat');
 
 // routes
-const userRoutes = require('./routes/userRoutes');
-const chatRoutes = require('./routes/chatRoutes');
-const groupRoutes = require('./routes/groupRoutes');
-const fileRoutes = require('./routes/fileRoutes');
+const userRoutes = require('./routes/user');
+const chatRoutes = require('./routes/chat');
+const groupRoutes = require('./routes/group');
+const fileRoutes = require('./routes/file');
 
 app.use(cors());
 app.use(bodyParser.json());
@@ -38,8 +38,8 @@ app.use(express.json());
 app.use(bodyParser.urlencoded({extended: true}));
 
 app.use('/user', userRoutes);
-app.use('/chat-app', chatRoutes);
-app.use('/user-groups', groupRoutes);
+app.use('/chats', chatRoutes);
+app.use('/group', groupRoutes);
 app.use('/files', upload.single('userFile'),fileRoutes);
 
 // User and textMessages relation

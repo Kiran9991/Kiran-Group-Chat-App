@@ -1,7 +1,7 @@
 const Chat = require('../models/chat');
-const ArchivedChat = require('../models/ArchivedChat');
+const ArchivedChat = require('../models/archivedChat');
  
-// Posting text Message to Chata table
+// Posting text Message to Chats table
 const postMessage = async(req, res) => {
     try {
         const { textMessage, groupId } = req.body;
@@ -18,12 +18,12 @@ const postMessage = async(req, res) => {
 
     } catch(err) {
         console.log(err);
-        res.status(500).json({ error: 'Something went wrong' });
+        res.status(500).json({ error: 'Internal Server Error' });
     }
 }
 
 // Getting old messages from Chats table according to groupId
-const getOldMessages = async(req, res) => {
+const getMessages = async(req, res) => {
     try{
         const groupId = req.query.groupId;
         const textMessages = await Chat.findAll({ where:{groupId} });
@@ -34,11 +34,11 @@ const getOldMessages = async(req, res) => {
         }
     } catch(err) {
         console.log(err);
-        res.status(500).json({ error: 'Something went wrong' });
+        res.status(500).json({ error: 'Internal Server Error' });
     }
 }
 
 module.exports = {
     postMessage,
-    getOldMessages,
+    getMessages,
 }

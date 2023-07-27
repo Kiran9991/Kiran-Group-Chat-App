@@ -1,6 +1,6 @@
 const Group = require('../models/group');
 const User = require('../models/user');
-const User_Group = require('../models/user_group');
+const User_Group = require('../models/userGroup');
 const sequelize = require('../util/database');
 
 // Method for checking string is valid or not

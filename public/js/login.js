@@ -14,7 +14,7 @@ async function loginUser (e) {
         password
     }
 
-    const response = await axios.post('http://localhost:3000/user/login-user', loginDetails);
+    const response = await axios.post('http://localhost:3000/user/login', loginDetails);
     console.log(response);
     alert(response.data.message)
     localStorage.setItem('token', response.data.token)

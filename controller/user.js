@@ -39,7 +39,7 @@ const signup = async(req, res) => {
     } catch(err) {
         await t.rollback();
         console.log(err);
-        res.status(500).json({error:'Something went wrong'});
+        res.status(500).json({error:'Internal Server Error'});
     }
 }
 
@@ -78,7 +78,7 @@ const login = async (req, res) => {
     } catch(err) {
         await t.rollback();
         console.log(err);
-        res.status(500).json({ error: 'Something went wrong' });
+        res.status(500).json({ error: 'Internal Server Error' });
     }
 }
 
@@ -88,7 +88,7 @@ const getUsers = async(req, res) => {
         res.status(202).json({ listOfUsers: users })
     } catch(err) {
         console.log(err);
-        res.status(500).json({ error: `Something went wrong` })
+        res.status(500).json({ error: `Internal Server Error` })
     }
 }
 

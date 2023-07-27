@@ -20,7 +20,7 @@ async function storeSignupDetails(e) {
 
         console.log('it worked')
     
-        const response = await axios.post('http://localhost:3000/user/signup-user', signupDetails)
+        const response = await axios.post('http://localhost:3000/user/signup', signupDetails)
             alert(response.data.message)
             console.log(response.data.message);
             console.log(response)
