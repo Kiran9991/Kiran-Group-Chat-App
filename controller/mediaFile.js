@@ -17,7 +17,7 @@ const postMediaFile = async(req, res) => {
         res.status(202).json({ files:postFile , message: `file sended successfully `});
     } catch(err) {
         console.log(err);
-        res.status(500).json({ error: `Something went wrong` });
+        res.status(500).json({ error: `Internal Server Error` });
     }
 }
 

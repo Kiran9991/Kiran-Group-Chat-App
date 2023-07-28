@@ -1,7 +1,7 @@
 const close = document.getElementById('close');
 
 close.addEventListener('click', () => {
-    window.location.href = '../views/chatApp.html';
+    window.location.href = '../views/chat-app.html';
 })
 
 const submitbtn = document.getElementById('submitGroup')

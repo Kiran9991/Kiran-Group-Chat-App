@@ -9,7 +9,7 @@ const Group = sequelize.define('groups', {
       allowNull: false,
       primaryKey: true
     },
-    groupName: Sequelize.STRING,
+    name: Sequelize.STRING,
     createdBy: Sequelize.STRING,
   });
   

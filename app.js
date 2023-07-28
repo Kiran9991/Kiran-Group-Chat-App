@@ -23,7 +23,7 @@ const sequelize = require('./util/database')
 const User = require('./models/user');
 const Chats = require('./models/chat');
 const Group = require('./models/group');
-const User_Group = require('./models/userGroup');
+const UserGroup = require('./models/userGroup');
 const ArchivedChats = require('./models/archivedChat');
 
 // routes
@@ -51,8 +51,8 @@ Group.hasMany(Chats);
 Chats.belongsTo(Group);
 
 // Users and Groups relation
-User.belongsToMany(Group, { through: User_Group });
-Group.belongsToMany(User, { through: User_Group });
+User.belongsToMany(Group, { through: UserGroup });
+Group.belongsToMany(User, { through: UserGroup });
 
 // Users and archived chats relation
 User.hasMany(ArchivedChats);

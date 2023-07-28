@@ -20,7 +20,7 @@ async function loginUser (e) {
     localStorage.setItem('token', response.data.token)
     document.getElementById('someResponse').textContent = `${response.data.message}`;
     document.getElementById('someResponse').style.color = 'green';
-    window.location.href = '../views/chatapp.html';
+    window.location.href = '../views/chat-app.html';
     } catch (err) {
         console.log(err);
         document.getElementById('someResponse').innerHTML = `Error: ${err.response.data.error}`

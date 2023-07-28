@@ -1,6 +1,6 @@
 const Group = require('../models/group');
 const User = require('../models/user');
-const User_Group = require('../models/userGroup');
+const UserGroup = require('../models/userGroup');
 const sequelize = require('../util/database');
 
 // Method for checking string is valid or not
@@ -23,36 +23,36 @@ const postNewGroup = async(req, res) => {
             return res.status(400).json({error: "Parameters are missing"});
         }
 
-        const group = await Group.create({ groupName:groupName, createdBy:name, userId:req.user.id },{ transaction: t});
-        const user_group = await User_Group.create({ userId:req.user.id, groupId: group.dataValues.id, isAdmin: true},
+        const group = await Group.create({ name:groupName, createdBy:name, userId:req.user.id },{ transaction: t});
+        const userGroup = await UserGroup.create({ userId:req.user.id, groupId: group.dataValues.id, isAdmin: true},
         { transaction: t})
 
         await t.commit();
-        res.status(202).json({ newGroup:group, message: `Successfully created ${groupName}`, user_group })
+        res.status(202).json({ newGroup:group, message: `Successfully created ${groupName}`, userGroup })
     } catch(err) {
         await t.rollback();
         console.log(err);
-        res.status(500).json({ error: 'Something went wrong' });
+        res.status(500).json({ error: 'Internal Server Error' });
     }
 }
 
 // Getting groups lists from groups table according to user id
 const getGroups = async(req, res) => {
     try {
-        const user_group = await User_Group.findAll({ where:{userId: req.user.id}});
+        const userGroup = await UserGroup.findAll({ where:{userId: req.user.id}});
         
         let groupsList = [];
-        for(let i=0; i<user_group.length; i++) {
-            let group_id = user_group[i].dataValues.groupId;
+        for(let i=0; i<userGroup.length; i++) {
+            let group_id = userGroup[i].dataValues.groupId;
             const groups = await Group.findByPk(group_id);
             groupsList.push(groups)
         }
         const users = await User.findAll();
        
-        res.status(201).json({ listOfUsers: users, groupsList, user_group})
+        res.status(201).json({ listOfUsers: users, groupsList, userGroup})
     } catch(err) {
         console.log(err);
-        res.status(500).json({ error: 'Something went wrong' });
+        res.status(500).json({ error: 'Internal Server Error' });
     }
 } 
 
@@ -62,14 +62,14 @@ const addUserToGroup = async(req, res) => {
     try{
         const { toUserId, groupId } = req.body;
 
-        const user_group = await User_Group.create({ userId:toUserId, groupId:groupId, isAdmin:false },{ transaction: t});
+        const userGroup = await UserGroup.create({ userId:toUserId, groupId:groupId, isAdmin:false },{ transaction: t});
 
         await t.commit();
-        res.status(202).json({ user_group, message: 'Successfully added user to your group' })
+        res.status(202).json({ userGroup, message: 'Successfully added user to your group' })
     } catch(err) {
         await t.rollback();
         console.log(err);
-        res.status(500).json({ error: 'Something went wrong'})
+        res.status(500).json({ error: 'Internal Server Error'})
     }
 } 
 
@@ -78,16 +78,16 @@ const getGroupMembers = async(req, res) => {
     try{
         const groupId = req.query.groupId;
         const usersDetails = [];
-        const user_group = await User_Group.findAll({ where:{groupId}})
-        for(let i=0; i<user_group.length; i++) {
-            let user_id = user_group[i].dataValues.userId;
-            const user = await User.findByPk(user_id)
+        const userGroup = await UserGroup.findAll({ where:{groupId}})
+        for(let i=0; i<userGroup.length; i++) {
+            let userId = userGroup[i].dataValues.userId;
+            const user = await User.findByPk(userId)
             usersDetails.push(user)
         }
-        res.status(201).json({ usersDetails, user_group });
+        res.status(201).json({ usersDetails, userGroup });
     } catch(err) {
         console.log(err);
-        res.status(500).json({ error: `Something went wrong `})
+        res.status(500).json({ error: `Internal Server Error `})
     }
 }
 
@@ -95,16 +95,16 @@ const getGroupMembers = async(req, res) => {
 const deleteGroupMember = async(req, res) => {
     const t = await sequelize.transaction();
     try {
-        const user_groupId = req.query.user_groupId;
+        const userGroupId = req.query.userGroupId;
         
-        const user_group = await User_Group.destroy({ where:{id: user_groupId } }, { transaction: t});
+        const userGroup = await UserGroup.destroy({ where:{id: userGroupId } }, { transaction: t});
 
         await t.commit();
-        res.status(200).json({ user_group , message: `Successfully deleted user_group_Id`})
+        res.status(200).json({ userGroup , message: `Successfully removed group member`})
     } catch(err) {
         await t.rollback();
         console.log(err);
-        res.status(500).json({ error: `Something went wrong` });
+        res.status(500).json({ error: `Internal Server Error` });
     }
 }
 
@@ -112,18 +112,18 @@ const deleteGroupMember = async(req, res) => {
 const updateIsAdmin = async(req, res) => {
     const t = await sequelize.transaction();
     try {
-        const user_group_Id = req.query.user_group_Id;
+        const userGroup_Id = req.query.userGroup_Id;
         
-        const user_group = await User_Group.findOne({ where:{id: user_group_Id } });
+        const userGroup = await UserGroup.findOne({ where:{id: userGroup_Id } });
 
-        const updateAdmin = await user_group.update({ isAdmin: true }, { transaction:t });
+        const updateAdmin = await userGroup.update({ isAdmin: true }, { transaction:t });
 
         await t.commit();
         res.status(202).json({ updateAdmin , message: `Successfully made Admin of Group`});
     } catch(err) {
         await t.rollback();
         console.log(err);
-        res.status(500).json({ error: `Something went wrong` });
+        res.status(500).json({ error: `Internal Server Error` });
     }
 }
 
