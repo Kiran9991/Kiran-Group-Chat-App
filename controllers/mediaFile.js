@@ -4,11 +4,11 @@ const S3service = require('../services/S3services');
 // Posting file url in the Chats table 
 const postMediaFile = async(req, res) => {
     try {
-        const groupId = req.query.groupId;
+        const { groupId } = req.params;
         const userId = req.user.id;
+        const name = req.user.name;
         const file = req.file.buffer;
         const fileName = `${userId} ${req.file.originalname}`;
-        const name = req.user.name
 
         const fileUrl = await S3service.uploadToS3(file, fileName);
 

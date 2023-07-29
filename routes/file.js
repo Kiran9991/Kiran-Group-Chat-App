@@ -1,11 +1,11 @@
 const express = require('express');
 
-const fileController = require('../controller/mediaFile');
+const fileController = require('../controllers/mediaFile');
 
 const authenticateMiddleware = require('../middleware/auth');
 
 const router = express.Router();
 
-router.post('/file',authenticateMiddleware.authenticate, fileController.postMediaFile)
+router.post('/file/:groupId',authenticateMiddleware.authenticate, fileController.postMediaFile)
 
 module.exports = router;

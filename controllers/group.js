@@ -60,9 +60,9 @@ const getGroups = async(req, res) => {
 const addUserToGroup = async(req, res) => {
     const t = await sequelize.transaction();
     try{
-        const { toUserId, groupId } = req.body;
+        const { userId, groupId } = req.params;
 
-        const userGroup = await UserGroup.create({ userId:toUserId, groupId:groupId, isAdmin:false },{ transaction: t});
+        const userGroup = await UserGroup.create({ userId, groupId, isAdmin:false },{ transaction: t});
 
         await t.commit();
         res.status(202).json({ userGroup, message: 'Successfully added user to your group' })
@@ -76,7 +76,7 @@ const addUserToGroup = async(req, res) => {
 // Getting users id from user group according to group id and then getting the users according to user id
 const getGroupMembers = async(req, res) => {
     try{
-        const groupId = req.query.groupId;
+        const { groupId } = req.params;
         const usersDetails = [];
         const userGroup = await UserGroup.findAll({ where:{groupId}})
         for(let i=0; i<userGroup.length; i++) {
@@ -95,9 +95,9 @@ const getGroupMembers = async(req, res) => {
 const deleteGroupMember = async(req, res) => {
     const t = await sequelize.transaction();
     try {
-        const userGroupId = req.query.userGroupId;
+        const { id } = req.params;
         
-        const userGroup = await UserGroup.destroy({ where:{id: userGroupId } }, { transaction: t});
+        const userGroup = await UserGroup.destroy({ where:{ id } }, { transaction: t});
 
         await t.commit();
         res.status(200).json({ userGroup , message: `Successfully removed group member`})
@@ -112,9 +112,9 @@ const deleteGroupMember = async(req, res) => {
 const updateIsAdmin = async(req, res) => {
     const t = await sequelize.transaction();
     try {
-        const userGroup_Id = req.query.userGroup_Id;
+        const userGroupId = req.params.userGroupId;
         
-        const userGroup = await UserGroup.findOne({ where:{id: userGroup_Id } });
+        const userGroup = await UserGroup.findOne({ where:{id: userGroupId } });
 
         const updateAdmin = await userGroup.update({ isAdmin: true }, { transaction:t });
 

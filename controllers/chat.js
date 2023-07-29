@@ -25,7 +25,7 @@ const postMessage = async(req, res) => {
 // Getting old messages from Chats table according to groupId
 const getMessages = async(req, res) => {
     try{
-        const groupId = req.query.groupId;
+        const { groupId } = req.params;
         const textMessages = await Chat.findAll({ where:{groupId} });
         if(textMessages.length > 0) {
             return res.status(202).json({ textMessages })

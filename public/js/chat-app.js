@@ -69,7 +69,7 @@ async function uploadFile(e) {
         const form = new FormData();
         form.append('userFile', file);
         
-        const response = await axios.post(`http://localhost:3000/files/file?groupId=${Number(groupId)}`, form,
+        const response = await axios.post(`http://localhost:3000/files/file/${groupId}`, form,
         {headers:{'Authorization':token ,'Content-Type': 'multipart/form-data'}})
         
         const fileData = response.data.files;
@@ -142,7 +142,7 @@ const getUserMsgs = (groupId) => {
         button.className = 'button-18';
         button.onclick = async () => {
             //Getting messages from get req
-            const response = await axios.get(`http://localhost:3000/chats/Messages?groupId=${groupId}`,)
+            const response = await axios.get(`http://localhost:3000/chats/Messages/${groupId}`,)
             let lastestChats = response.data.textMessages
             // Storing Previous all messages in local storage
             if(response.status === 202) {
@@ -229,7 +229,7 @@ showGroups.addEventListener('click', async () => {
 showGroupMembers.addEventListener('click', async () => {
     const groupDetails = JSON.parse(localStorage.getItem('groupDetails'))
     showGroupUserListTitle()
-    const res = await axios.get(`http://localhost:3000/group/members?groupId=${groupDetails.id}`);
+    const res = await axios.get(`http://localhost:3000/group/members/${groupDetails.id}`);
     const listOfGroupMembers = res.data.usersDetails
     const userGroupDetails = res.data.userGroup; 
     for(let i=0, j=0; i<listOfGroupMembers.length, j<userGroupDetails.length; i++,j++) {
@@ -302,18 +302,12 @@ const showUsersOnScreen = (users) => {
     
             const groupId = groupData.id;
             const toUserId = users.id;
-            const obj = {
-                toUserId,
-                groupId
-            }
             if(groupData.id) {
             button.addEventListener('click', async() => {
                 try {
-                    const addUserToGroup = await axios.post(`http://localhost:3000/group/add`, obj,
-                    { headers: {"Authorization": token }})
-                    console.log(addUserToGroup.data.userGroup);
+                    const addUserToGroup = await axios.post(`http://localhost:3000/group/add/${toUserId}/${groupId}`)
                     const groupDetails = JSON.parse(localStorage.getItem('groupDetails'));
-                    if(addUserToGroup.data.userGroup.userId === users.id) {
+                    if(Number(addUserToGroup.data.userGroup.userId) === users.id) {
                         alert(`You successfully added ${users.name} to ${groupDetails.name}`)
                     }
                 } catch(err) {
@@ -385,7 +379,7 @@ const showGroupUsersOnScreen = (users, userGroup) => {
         
     removeUser.addEventListener('click', async() => {
         const userGroupId = userGroup.id;
-        const res = await axios.delete(`http://localhost:3000/group/remove?userGroupId=${userGroupId}`); 
+        const res = await axios.delete(`http://localhost:3000/group/remove/${userGroupId}`); 
         if(res.status === 200) {
             li.remove();
             alert(`You Successfully removed ${users.name} from ${groupDetails.name}`)
@@ -393,8 +387,8 @@ const showGroupUsersOnScreen = (users, userGroup) => {
     })
 
     makeAdmin.addEventListener('click', async() => {
-        const userGroup_Id = userGroup.id;
-        const res = await axios.post(`http://localhost:3000/group/admin?userGroup_Id=${userGroup_Id}`); 
+        const userGroupId = userGroup.id;
+        const res = await axios.post(`http://localhost:3000/group/admin/${userGroupId}`); 
         if(res.status === 202) {
             makeAdmin.remove();
             removeUser.remove();
@@ -410,7 +404,7 @@ const showGroupUsersOnScreen = (users, userGroup) => {
 const leaveUserGroup = (leaveGroup, userGroupId, li) => {
     const groupDetails = JSON.parse(localStorage.getItem('groupDetails'))
     leaveGroup.addEventListener('click',async() => {
-        const res = await axios.delete(`http://localhost:3000/group/remove?userGroupId=${userGroupId}`);
+        const res = await axios.delete(`http://localhost:3000/group/remove/${userGroupId}`);
         if(res.status === 200) {
             li.remove();
             alert(`You Successfully leaved ${groupDetails.name}`)
